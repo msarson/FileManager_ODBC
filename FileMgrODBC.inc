@@ -121,8 +121,7 @@ ExecuteQueryOut  procedure(*IDynStr sqlStatement, *queue q, *group outParameters
 
 ! --------------------------------------------------------------------------
 ! execute the stored procedure input in the string 
-! this stored procedure does not return a result set and does not accept 
-! any parameters
+! this stored procedure does not return a result set 
 ! --------------------------------------------------------------------------
 ExecuteSp procedure(string spName),virtual,sqlreturn
 
