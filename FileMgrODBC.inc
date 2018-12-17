@@ -85,7 +85,7 @@ ClearParameters procedure()
 ! DDL statements, 
 ! 
 ! example DML,
-! insert into schema.Table(col_one, colTwo) values(@inP1, @inP2);
+! insert into schema.Table(col_one, colTwo) values(?, ?);
 !
 ! example DDL,
 ! alter database <databse name> set single_user with rollback immediate;
