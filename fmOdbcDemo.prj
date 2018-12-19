@@ -1,0 +1,14 @@
+-- fnOdbcDemo
+#noedit
+#system win32
+#model clarion dll
+#pragma debug(vid=>full)
+#pragma optimize(cpu=>386)
+#pragma define(_svDllMode_=>0)
+#pragma define(_svLinkMode_=>1)
+#pragma define(_ABCDllMode_=>0)
+#pragma define(_ABCLinkMode_=>1)
+#compile "fmOdbcDemo.clw"
+#pragma link("C%V%ODB%X%%L%.LIB")
+#pragma link("C:\git_repo\ODBC\odbc_13.lib")
+#link "fmOdbcDemo.exe"
