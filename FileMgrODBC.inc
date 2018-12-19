@@ -11,11 +11,13 @@ _FileMgrODBC_         equate(1)
   include('odbcParamsCl.inc'),once
   include('odbcColumnsCl.inc'),once
   include('dynstr.inc'),once
-
+  include('odbcCl.inc'),once
+  
+odbcErrorValue equate(byte)
 defautlStrSize equate(50)
 
 ! -----------------------------------------------------
-! used to store queries in some resouce outside of the 
+! used to store queries in some resource outside of the 
 ! application.  
 ! the list would be loaded when and then the 
 ! not yet added to the derived file manger interface
@@ -35,7 +37,11 @@ queryStr        &IDynStr
 ! file mamanger object is not well written, main issue is the class was 
 ! written after the templates or at least written for the templates, not good
 ! ------------------------------------------------------------------------------
-FileMgrOdbc   class(FileManager),type,MODULE('fileMgrOdbc.clw'),link('fileMgrOdbc.clw',_ABCLinkMode_),dll(_ABCDllMode_)   
+FileMgrOdbc   class(FileManager),type,MODULE('FileMgrODBC.clw'),link('FileMgrODBC.clw',_ABCLinkMode_),dll(_ABCDllMode_)   
+
+
+conn          &ODBCConnectionClType
+odbc          &odbcClType
 
 ! ---------------------------------------------------------------------
 ! instance of the columns class.
@@ -46,7 +52,6 @@ FileMgrOdbc   class(FileManager),type,MODULE('fileMgrOdbc.clw'),link('fileMgrOdb
 ! or stored procedure does not return a result set.
 ! ---------------------------------------------------------------------
 Columns         &ColumnsClass
-
 ! ---------------------------------------------------------------------
 ! instance of the parameters class.
 ! add the parameters  that will be used by a query or a stored procedure
@@ -69,12 +74,15 @@ ClearColumns   procedure()
 ! ---------------------------------------------------------------------
 ! clears the data meber of any parameters
 ! typical use would be 
-! FileMgrOdbc.ClearColumns()
+! FileMgrOdbc.ClearParameters()
 ! FileMgrOdbc.Parameters.AddInParameter(...)
 ! FileMgrOdbc.Parameters.AddInParameter(...)
 ! FileMgrOdbc.ExecuteSp(some statement)
 ! ---------------------------------------------------------------------
 ClearParameters procedure()
+
+SetEnviorment  procedure(*ODBCConnectionClType  conn)
+GetEnv   procedure(),long
 
 ! --------------------------------------------------------------------------
 ! execute the sql statment input 
@@ -88,7 +96,7 @@ ClearParameters procedure()
 ! insert into schema.Table(col_one, colTwo) values(?, ?);
 !
 ! example DDL,
-! alter database <databse name> set single_user with rollback immediate;
+! alter database <database name> set single_user with rollback immediate;
 ! --------------------------------------------------------------------------
 ExecuteNonQuery  procedure(*IDynStr sqlStatement),virtual,sqlreturn
 
@@ -104,7 +112,8 @@ ExecuteQuery  procedure(*IDynStr sqlStatement, *queue q),virtual,sqlreturn
 ! this call does not return a result set
 ! 
 ! the group may contain one to n fields, each field must be bound prior to the call
-! 
+! if the field is used as an out parameter.  the group may contain many fields and 
+! only one or two are actually used as out parameters.
 ! --------------------------------------------------------------------------
 ExecuteQueryOut  procedure(*IDynStr sqlStatement, *group outParameters),virtual,sqlreturn
 
@@ -114,6 +123,8 @@ ExecuteQueryOut  procedure(*IDynStr sqlStatement, *group outParameters),virtual,
 ! this call also returns a result set
 ! 
 ! the group may contain one to n fields, each field must be bound prior to the call
+! if the field is used as an out parameter.  the group may contain many fields and 
+! only one or two are actually used as out parameters.
 ! 
 ! note, the result set is processed first then the out parameters are set
 ! --------------------------------------------------------------------------
@@ -141,10 +152,10 @@ ExecuteSp procedure(string spName, *queue q),virtual,sqlreturn
 ! select count(columName) from schemaName.TableName where someCol = paramOne and/or ...;
 ! for scalar functions format theinput like this
 ! select @retv = schema.FunctionLabel(...) 
-! bind any parameters for the function
+! bind any parameters for the function and bind the returned value 
 ! --------------------------------------------------------------------------
 ExecuteScalar procedure(*IDynStr scalarQuery),long,virtual
 
               end ! class
 
-_EndOfInclude_
+  _EndOfInclude_
