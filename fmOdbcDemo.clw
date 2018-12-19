@@ -156,8 +156,7 @@ retv   byte,auto
   set(labelDemo)
 
   loop
-    retv = fm.next()
-    if (retv <> Level:Benign)
+    if (fm.next() <> level:Benign)
       break
     end
     demoQueue.sysId = labelDemo.Sysid
