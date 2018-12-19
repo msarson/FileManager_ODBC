@@ -95,6 +95,7 @@ retv   byte,auto
 
   free(demoQueue)
 
+  fm.clearColumns()
   fm.columns.AddColumn(demoQueue.sysId)
   fm.columns.AddColumn(demoQueue.Label)
   fm.columns.AddColumn(demoQueue.amount)
