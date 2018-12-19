@@ -2,6 +2,7 @@
 
   include('FileMgrODBC.inc'),once
   include('odbcTypes.inc'),once
+  include('odbcSqlStrCl.inc'),once
 
   map 
     module('odbc32')
@@ -13,6 +14,14 @@
 
   end
 
+FileMgrODBC.Init          PROCEDURE(File File, ErrorClass EC) !,VIRTUAL
+
+  code
+
+  parent.Init(file, ec)
+
+  return
+  
 FileMgrODBC.SetEnviorment  procedure(*ODBCConnectionClType  conn)
 
   code 
@@ -20,6 +29,8 @@ FileMgrODBC.SetEnviorment  procedure(*ODBCConnectionClType  conn)
   self.conn &= conn
   self.odbc &= new(odbcClType)
   self.odbc.init(self.conn)
+  self.columns &= new(columnsClass)
+  self.columns.Init()
 
   return
 ! ----------------------------------------------------------  
@@ -43,7 +54,6 @@ FileMgrODBC.ClearParameters procedure()
 
 FileMgrODBC.ExecuteNonQuery procedure(*IDynStr sqlStatement) !,virual,SQLRETURN
 
-hDbc    SQLHDBC,auto
 retv    sqlReturn(SQL_SUCCESS)
 
   code
@@ -97,8 +107,17 @@ FileMgrODBC.ExecuteQueryOut  procedure(*IDynStr sqlStatement, *queue q, *group o
 ! --------------------------------------------------------------------------
 FileMgrODBC.ExecuteSp procedure(string spName) !,virtual,sqlreturn
 
+retv    sqlReturn(SQL_SUCCESS)
+p       &ParametersClass
+
   code
-  return 0  
+ 
+  retv = self.conn.connect();
+  if (retv = SQL_SUCCESS) 
+    retv = self.odbc.ExecSp(spName, p)
+  end 
+
+  return retv
 
 ! --------------------------------------------------------------------------
 ! execute the stored procedure input in the string 
@@ -106,7 +125,15 @@ FileMgrODBC.ExecuteSp procedure(string spName) !,virtual,sqlreturn
 ! --------------------------------------------------------------------------
 FileMgrODBC.ExecuteSp procedure(string spName, *queue q) !,virtual,sqlreturn
 
+retv    sqlReturn(SQL_SUCCESS)
+
   code
+
+  retv = self.conn.connect();
+  if (retv = SQL_SUCCESS) 
+    self.odbc.execSp(spName, self.columns, q)
+  end
+
   return 0
 
 ! --------------------------------------------------------------------------

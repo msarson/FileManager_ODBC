@@ -42,7 +42,7 @@ FileMgrOdbc   class(FileManager),type,MODULE('FileMgrODBC.clw'),link('FileMgrODB
 
 conn          &ODBCConnectionClType
 odbc          &odbcClType
-
+Init          PROCEDURE(File File,ErrorClass EC),VIRTUAL
 ! ---------------------------------------------------------------------
 ! instance of the columns class.
 ! add the columns that will be filled from the result set that  the 
@@ -82,6 +82,7 @@ ClearColumns   procedure()
 ClearParameters procedure()
 
 SetEnviorment  procedure(*ODBCConnectionClType  conn)
+
 GetEnv   procedure(),long
 
 ! --------------------------------------------------------------------------
@@ -158,4 +159,4 @@ ExecuteScalar procedure(*IDynStr scalarQuery),long,virtual
 
               end ! class
 
-  _EndOfInclude_
+_EndOfInclude_
