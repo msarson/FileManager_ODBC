@@ -39,10 +39,9 @@ queryStr        &IDynStr
 ! ------------------------------------------------------------------------------
 FileMgrOdbc   class(FileManager),type,MODULE('FileMgrODBC.clw'),link('FileMgrODBC.clw',_ABCLinkMode_),dll(_ABCDllMode_)   
 
+conn            &ODBCConnectionClType
+odbc            &odbcClType
 
-conn          &ODBCConnectionClType
-odbc          &odbcClType
-Init          PROCEDURE(File File,ErrorClass EC),VIRTUAL
 ! ---------------------------------------------------------------------
 ! instance of the columns class.
 ! add the columns that will be filled from the result set that  the 
@@ -52,6 +51,7 @@ Init          PROCEDURE(File File,ErrorClass EC),VIRTUAL
 ! or stored procedure does not return a result set.
 ! ---------------------------------------------------------------------
 Columns         &ColumnsClass
+
 ! ---------------------------------------------------------------------
 ! instance of the parameters class.
 ! add the parameters  that will be used by a query or a stored procedure
@@ -60,6 +60,13 @@ Columns         &ColumnsClass
 ! or stored procedure does not accept parameters
 ! ---------------------------------------------------------------------
 Parameters      &ParametersClass
+
+! ---------------------------------------------------------------------
+! overloaded file manager init method, 
+! not really needed but provides a good location to do some set up for 
+! this object
+! ---------------------------------------------------------------------
+Init          procedure(),virtual 
 
 ! ---------------------------------------------------------------------
 ! clears the data meber of any columns 
@@ -83,7 +90,17 @@ ClearParameters procedure()
 
 SetEnviorment  procedure(*ODBCConnectionClType  conn)
 
-GetEnv   procedure(),long
+! ----------------------------------------------------------
+! clears any columns and parameters used.  
+! this is called from the diconnect function if the connection was 
+! opened here, if not then the caller will need t odo any clean up
+!
+! main issue with clearing is the use of multiple resutl sets.
+! clearing the parameters would be fine, the columns may need to 
+! be cleared and they may not need to be cleared, best to leaveto the 
+! developer for the specific instance.
+! ---------------------------------------------------------
+ClearInputs procedure(),virtual
 
 ! --------------------------------------------------------------------------
 ! execute the sql statment input 
@@ -156,6 +173,22 @@ ExecuteSp procedure(string spName, *queue q),virtual,sqlreturn
 ! bind any parameters for the function and bind the returned value 
 ! --------------------------------------------------------------------------
 ExecuteScalar procedure(*IDynStr scalarQuery),long,virtual
+
+! --------------------------------------------------------------------------
+! opens a connection for a call to the server, if the connection is not 
+! currently open.  
+! returns true if the connection was opened and false if it ws not opened.
+! false does not indicate an error, but that connection was opened before 
+! the current call.
+! --------------------------------------------------------------------------
+OpenConnection procedure(),byte,private 
+
+! --------------------------------------------------------------------------
+! closes  a connection
+! the input value should be from the returned value of the OpenConnection call
+! if the inpput is true then connection is closed.  if false the connection is not closed
+! --------------------------------------------------------------------------
+CloseConnection procedure(byte openedHere),private 
 
               end ! class
 
