@@ -16,18 +16,6 @@ _FileMgrODBC_         equate(1)
 odbcErrorValue equate(byte)
 defautlStrSize equate(50)
 
-! -----------------------------------------------------
-! used to store queries in some resource outside of the 
-! application.  
-! the list would be loaded when and then the 
-! not yet added to the derived file manger interface
-! -----------------------------------------------------
-queryQueue    queue,type
-ObjectName      string(defautlStrSize)
-groupName       string(defautlStrSize)
-queryStr        &IDynStr
-              end
-
 ! ------------------------------------------------------------------------------
 ! Derived file manager that will use the ODBC API's for the calls.
 ! this is an example of the interface and if the project goes forward then 
@@ -63,29 +51,28 @@ Parameters      &ParametersClass
 
 ! ---------------------------------------------------------------------
 ! overloaded file manager init method, 
-! not really needed but provides a good location to do some set up for 
-! this object
+! used to provide a location to do some set up for this object
 ! ---------------------------------------------------------------------
 Init          procedure(),virtual 
 
-! ---------------------------------------------------------------------
-! clears the data meber of any columns 
-! typical use would be 
-! FileMgrOdbc.ClearColumns()
-! FileMgrOdbc.Columns.AddColumns(...)
-! FileMgrOdbc.Columns.AddColumns(...)
-! FileMgrOdbc.ExecuteSp(some statement)
+! ----------------------------------------------------------
+! clears any columns in the queue.  typically called 
+! before after some operation so the columns are cleared 
+! for the next binding call.  this can be called when ever 
+! it is needed, before an operation or after.  
+!
+! do not call duing an operation or the bound columns will be lost
 ! ---------------------------------------------------------------------
 ClearColumns   procedure()
 
-! ---------------------------------------------------------------------
-! clears the data meber of any parameters
-! typical use would be 
-! FileMgrOdbc.ClearParameters()
-! FileMgrOdbc.Parameters.AddInParameter(...)
-! FileMgrOdbc.Parameters.AddInParameter(...)
-! FileMgrOdbc.ExecuteSp(some statement)
-! ---------------------------------------------------------------------
+! ----------------------------------------------------------
+! clears any parameters  in the queue.  typically called 
+! after some operation to clear the queue for the next pass
+! 
+! can be called any time, before or after
+! if calling after be sure the operation has completed
+! or the bound parameters will be lost
+! ---------------------------------------------------------
 ClearParameters procedure()
 
 SetEnviorment  procedure(*ODBCConnectionClType  conn)
@@ -93,12 +80,14 @@ SetEnviorment  procedure(*ODBCConnectionClType  conn)
 ! ----------------------------------------------------------
 ! clears any columns and parameters used.  
 ! this is called from the diconnect function if the connection was 
-! opened here, if not then the caller will need t odo any clean up
+! opened here, if not then the caller will need to do any clean up
 !
 ! main issue with clearing is the use of multiple resutl sets.
-! clearing the parameters would be fine, the columns may need to 
-! be cleared and they may not need to be cleared, best to leaveto the 
-! developer for the specific instance.
+! clearing the parameters would be fine, becasue the call has completed
+! the columns may need to be cleared using a different queue in the second and 
+! following reqult sets and in some cases they may 
+! not need to be cleared, using the same queue for a like result set,  
+! best to leave to the developer for the specific instance.
 ! ---------------------------------------------------------
 ClearInputs procedure(),virtual
 
@@ -120,6 +109,21 @@ ExecuteNonQuery  procedure(*IDynStr sqlStatement),virtual,sqlreturn
 
 ! --------------------------------------------------------------------------
 ! execute the sql statment input 
+! and get the value of an output parameter.  
+! this call does not return a result set
+!
+! the withAuto parameter is used to tell the system this query is some type of 
+! insert statement and there is a generated key or index value in use
+! when calling to insert and get the generated value back set the paramerter to true
+! and call with something like this 
+! insert into schema.Table(col_one, colTwo) values(?, ?);
+! select ? = scope_identity();
+! or use a guid or a sequence generator, adjust the parameters as needed
+! --------------------------------------------------------------------------
+ExecuteNonQueryOut  procedure(*IDynStr sqlStatement, bool withAuto = false),virtual,sqlreturn
+
+! --------------------------------------------------------------------------
+! execute the sql statment input 
 ! this call will fill the queue with a result set
 ! --------------------------------------------------------------------------
 ExecuteQuery  procedure(*IDynStr sqlStatement, *queue q),virtual,sqlreturn
@@ -127,38 +131,11 @@ ExecuteQuery  procedure(*IDynStr sqlStatement, *queue q),virtual,sqlreturn
 ! --------------------------------------------------------------------------
 ! execute the sql statment input 
 ! and get the value of an output parameter.  
-! this call does not return a result set
-! 
-! the group may contain one to n fields, each field must be bound prior to the call
-! if the field is used as an out parameter.  the group may contain many fields and 
-! only one or two are actually used as out parameters.
-! --------------------------------------------------------------------------
-ExecuteQueryOut  procedure(*IDynStr sqlStatement, *group outParameters),virtual,sqlreturn
-
-! --------------------------------------------------------------------------
-! execute the sql statment input 
-! and get the value of an output parameter.  
 ! this call also returns a result set
-! 
-! the group may contain one to n fields, each field must be bound prior to the call
-! if the field is used as an out parameter.  the group may contain many fields and 
-! only one or two are actually used as out parameters.
 ! 
 ! note, the result set is processed first then the out parameters are set
 ! --------------------------------------------------------------------------
-ExecuteQueryOut  procedure(*IDynStr sqlStatement, *queue q, *group outParameters),virtual,sqlreturn
-
-! --------------------------------------------------------------------------
-! execute the stored procedure input in the string 
-! this stored procedure does not return a result set 
-! --------------------------------------------------------------------------
-ExecuteSp procedure(string spName),virtual,sqlreturn
-
-! --------------------------------------------------------------------------
-! execute the stored procedure input in the string 
-! this stored procedure returns a result set
-! --------------------------------------------------------------------------
-ExecuteSp procedure(string spName, *queue q),virtual,sqlreturn
+ExecuteQueryOut  procedure(*IDynStr sqlStatement, *queue q),virtual,sqlreturn
 
 ! --------------------------------------------------------------------------
 ! execute the query input in the string 
@@ -175,18 +152,44 @@ ExecuteSp procedure(string spName, *queue q),virtual,sqlreturn
 ExecuteScalar procedure(*IDynStr scalarQuery),long,virtual
 
 ! --------------------------------------------------------------------------
+! execute the stored procedure input in the string 
+! this stored procedure does not return a result set 
+! --------------------------------------------------------------------------
+callSp procedure(string spName),virtual,sqlreturn
+
+! --------------------------------------------------------------------------
+! execute the stored procedure input in the string 
+! this stored procedure returns a result set
+! --------------------------------------------------------------------------
+callSp procedure(string spName, *queue q),virtual,sqlreturn
+
+! --------------------------------------------------------------------------
+! execute the query input in the string 
+! this query returns a result set of one row and one column
+!
+! use this function to call a scalar function on the server
+! --------------------------------------------------------------------------
+callScalar procedure(string scalarQuery),long,virtual
+
+! --------------------------------------------------------------------------
 ! opens a connection for a call to the server, if the connection is not 
 ! currently open.  
-! returns true if the connection was opened and false if it ws not opened.
-! false does not indicate an error, but that connection was opened before 
-! the current call.
+! returns Connection:Opened if the connection was opened,
+! Connection:CallerOpened if the connection is already opened
+! and Connection:Failed if it was not open and the open attempt failed.
 ! --------------------------------------------------------------------------
 OpenConnection procedure(),byte,private 
 
 ! --------------------------------------------------------------------------
 ! closes  a connection
 ! the input value should be from the returned value of the OpenConnection call
-! if the inpput is true then connection is closed.  if false the connection is not closed
+! if the input is Connectio:Opened then connection is closed.  
+! if any other value the connection is not closed because it was opened by the caller 
+! or the open attempt failed
+!
+! note if the connection was opened here then the columns and parameters are cleared.
+! if opened by some other calling code they are not cleared and the user must 
+! do any needed clean up.  
 ! --------------------------------------------------------------------------
 CloseConnection procedure(byte openedHere),private 
 
