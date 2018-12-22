@@ -213,7 +213,12 @@ openedHere  byte,auto
   openedHere = self.OpenConnection()
 
   if (openedHere <> Connection:Failed) 
+    retv = self.odbc.execQuery(sqlStatement, self.columns, self.Parameters, q)
+    if (retv = SQL_SUCCESS)
+      if (self.odbc.nextResultSet() = true)
 
+      end
+    end 
   end
   
   self.closeConnection(openedHere)

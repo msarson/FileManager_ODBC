@@ -9,9 +9,35 @@
      main()
      odbcSetup()
      fileManagerSetup()
-     fillSp()
-     fileFill()
-   end
+
+     module('fmOdbcSpCalls')
+       fillSp(fileMgrODBC fmOdbc)
+       fillSpNoOpen(fileMgrODBC fmOdbc)
+       fillSpWithParam(fileMgrODBC fmOdbc)
+       callScalar(fileMgrODBC fmOdbc)
+     end
+
+     module('fmOdbcFileMgr')
+       fileFill(fileMgrODBC fmOdbc)
+       propSqlFill()
+     end
+
+     module('fmOdbcSpOut')
+       spWithOut(fileMgrODBC fmOdbc)
+     end
+
+     module('fmodbcExeQuery')
+      executeQuery(fileMgrODBC fmOdbc)
+      execScalar(fileMgrODBC fmOdbc)
+      executeQueryTwo(fileMgrODBC fmOdbc)
+     end
+
+     module('fmOdbcInserts')
+       insertRow(fileMgrODBC fmOdbc)
+       insertRowQuery(fileMgrODBC fmOdbc)
+     end
+
+   end ! map
 
 ! define the connection string for use by the file
 Connstr     string('Driver={{ODBC Driver 13 for SQL Server};server=dennishyperv\dev;Database=default_test;trusted_connection=yes;')
@@ -21,13 +47,15 @@ Record        record,pre()
 SysId           long
 Label           string(60)
 Amount          real
-              end ! record 
+              end ! record
             end ! file
+
 
 demoQueue   queue
 SysId           long
 Label           string(60)
 Amount          real
+Department      string(60)
             end
 
 ! error class used by the file manager
@@ -56,10 +84,22 @@ fm  &localFm
 
 main procedure()
 
-Window WINDOW('Demo'),AT(,,275,103),FONT('MS Sans Serif',8,,FONT:regular),GRAY
-       BUTTON('Call Stored Procedure'),AT(37,32,85,14),USE(?btnSpCall)
-       BUTTON('File Manager Loop'),AT(137,33,81,14),USE(?btnFileManager)
-       BUTTON('&Done'),AT(115,65,36,14),USE(?btnCancel)
+Window WINDOW('Demo'),AT(,,387,286),FONT('MS Sans Serif',8,,FONT:regular),GRAY
+       BUTTON('Insert Row Query'),AT(11,70,109,14),USE(?btnInsertRowQuery)
+       BUTTON('Execute a Query'),AT(11,14,109,14),USE(?btnExecQuery)
+       BUTTON('Insert Row w/Identity out'),AT(143,72,124,14),USE(?btnInsertRow)
+       BUTTON('Execute Scalar'),AT(143,14,124,14),USE(?btnExecScalar)
+       BUTTON('Execute Query Two Tables'),AT(273,15,109,14),USE(?btnExecQueryTwo)
+       BUTTON('Call Stored Procedure'),AT(11,32,109,14),USE(?btnSpCall)
+       BUTTON('File Manager Loop'),AT(11,90,109,14),USE(?btnFileManager)
+       BUTTON('Prop Sql'),AT(143,93,74,14),USE(?btnPropSql)
+       BUTTON('Call Stored Procedure (No Connect)'),AT(143,32,124,14),USE(?btnSpNoConnect)
+       BUTTON('Stored Procedure W/Parameter'),AT(11,51,109,14),USE(?btnSpWithParam)
+       BUTTON('Stored Procedure w/out parameter'),AT(143,52,124,14),USE(?spWithOut)
+       BUTTON('Call Scalar Function'),AT(271,32,99,14),USE(?btnCallScalar)
+       LIST,AT(15,114,363,139),USE(?demoList),FORMAT('71L(2)|M~System Id~@N20@125L(2)|M~Label~59L(2)|M~Amount~@N20.2@40L(2)|M~Departme' &|
+           'nt~@s60@'),FROM(demoQueue)
+       BUTTON('&Done'),AT(163,262,36,14),USE(?btnCancel)
      END
 
   code
@@ -70,41 +110,40 @@ Window WINDOW('Demo'),AT(,,275,103),FONT('MS Sans Serif',8,,FONT:regular),GRAY
       of Event:Accepted
       case field()
         of ?btnSpCall
-          fillSp()
+          fillSp(fm)
+        of ?btnSpNoConnect
+          fillSpNoOpen(fm)
+        of ?btnSpWithParam
+          fillSpWithParam(fm)
         of ?btnFileManager
-          fileFill()
+          fileFill(fm)
+        of ?btnPropSql
+          propSqlFill()
+        of ?spWithOut
+          spWithOut(fm)
+        of ?btnCallScalar
+          callScalar(fm)
+        of ?btnExecScalar
+          execScalar(fm)
+        of ?btnExecQuery
+          executeQuery(fm)
+        of ?btnExecQueryTwo
+          executeQueryTwo(fm)
+        of ?btnInsertRow
+          insertRow(fm)
+        of ?btnInsertRowQuery
+          InsertRowQuery(fm)
         of ?btnCancel
           break
       end ! case field
     end ! case event
+
   end
 
   close(window)
 
   return
 ! end main -------------------------------------------------
-
-! --------------------------------------------------
-! fills the queue from a stored procedure 
-! --------------------------------------------------
-fillSp procedure()
-
-retv   byte,auto
-
-  code
-
-  free(demoQueue)
-
-  fm.clearColumns()
-  fm.columns.AddColumn(demoQueue.sysId)
-  fm.columns.AddColumn(demoQueue.Label)
-  fm.columns.AddColumn(demoQueue.amount)
-
-  retv = fm.ExecuteSp('dbo.ReadLabelDemo', demoQueue)
-  stop(records(demoQueue))
-
-  return 
-! end callSp ---------------------------------------------------
 
 ! --------------------------------------------------
 ! sets up the connection and connection string instances
@@ -133,6 +172,7 @@ fileManagerSetup procedure()
   errors.Init(ErrorStatus)
 
   fm &= new(localFm)
+  
   fm.init()
   fm.init(labelDemo, errors)
   
@@ -140,38 +180,6 @@ fileManagerSetup procedure()
 
   return
 ! end fileMangerSetup -------------------------------------------------------------
-
-! --------------------------------------------------
-! fill a queue using the typcial file manager access
-! --------------------------------------------------
-fileFill procedure()
-
-retv   byte,auto
-
-  code
-
-  free(demoQueue)
-  fm.open()
-  fm.useFile()
-
-  set(labelDemo)
-
-  loop
-    if (fm.next() <> level:Benign)
-      break
-    end
-    demoQueue.sysId = labelDemo.Sysid
-    demoQueue.Label = labelDemo.Label
-    demoQueue.amount = labelDemo.amount
-    add(demoQueue)
-  end
-
-  fm.close()
-
-  stop(records(demoQueue))
-
-  return
-! end fileFill -----------------------------------------------
 
 ! --------------------------------------------------
 ! overloaded init method so the buffer and some other defaults can be set
@@ -189,3 +197,4 @@ localFm.Init PROCEDURE
 
   return
 ! end init --------------------------------------------
+

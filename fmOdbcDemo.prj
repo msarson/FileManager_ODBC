@@ -9,6 +9,11 @@
 #pragma define(_ABCDllMode_=>0)
 #pragma define(_ABCLinkMode_=>1)
 #compile "fmOdbcDemo.clw"
+#compile "fmOdbcExeQuery.clw"
+#compile "fmOdbcSpCalls.clw"
+#compile "fmOdbcFileMgr.clw"
+#compile "fmOdbcInserts.clw"
+#compile "fmOdbcSpOut.clw"
 #pragma link("C%V%ODB%X%%L%.LIB")
 #pragma link("C:\git_repo\ODBC\odbc_13.lib")
 #link "fmOdbcDemo.exe"

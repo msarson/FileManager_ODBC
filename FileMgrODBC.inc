@@ -93,7 +93,7 @@ ClearInputs procedure(),virtual
 
 ! --------------------------------------------------------------------------
 ! execute the sql statment input 
-! this call does not return a result set but may use parameters
+! this call does not return a result set but may use parameters 
 ! 
 ! note, the columns member is ignored by this call
 ! this can be used to execute queries that do DML statements or 
