@@ -13,7 +13,10 @@
 #compile "fmOdbcSpCalls.clw"
 #compile "fmOdbcFileMgr.clw"
 #compile "fmOdbcInserts.clw"
+#compile "fmOdbcPageLoad.clw"
 #compile "fmOdbcSpOut.clw"
+#pragma link("C%V%MSS%X%%L%.LIB")
 #pragma link("C%V%ODB%X%%L%.LIB")
 #pragma link("C:\git_repo\ODBC\odbc_13.lib")
+#pragma link("C:\git_repo\ODBC\odbc_cancelAsync.lib")
 #link "fmOdbcDemo.exe"

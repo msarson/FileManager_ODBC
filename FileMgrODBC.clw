@@ -11,6 +11,9 @@
       SQLFreeStmt(SQLHSTMT StatementHandle, SQLSMALLINT opt),sqlReturn,pascal,proc
       SQLSetEnvAttr(SQLHENV EnvironmentHandle, SQLINTEGER Attribute,  SQLPOINTER Value, SQLINTEGER StringLength),sqlReturn,pascal
       SQLNumResultCols(SQLHSTMT StatementHandle,  *SQLSMALLINT ColumnCountPtr),sqlReturn,pascal
+      SetStmtAttr(SQLHSTMT StatementHandle, SQLINTEGER Attribute, SQLPOINTER ValuePtr, SQLINTEGER StringLength),sqlReturn,pascal,name('SQLSetStmtAttrW')
+      SetStmtEvent(SQLHSTMT StatementHandle, SQLINTEGER Attribute, SQLPOINTER ValuePtr, SQLINTEGER StringLength),sqlReturn,pascal,name('SQLSetStmtAttrW')
+      SQLSetConnectAttr(SQLHDBC ConnectionHandle,  SQLINTEGER    Attribute, SQLPOINTER ValuePtr, SQLINTEGER StringLength),sqlreturn,pascal,name('SQLSetConnectAttrW')
     end 
   end
 
@@ -88,7 +91,7 @@ FileMgrODBC.ClearParameters procedure()
 
 ! ----------------------------------------------------------
 ! clears any columns and parameters used.  
-! this is called from the diconnect function if the connection was 
+! this is called from the disconnect function if the connection was 
 ! opened here, if not then the caller will need to do any clean up
 !
 ! main issue with clearing is the use of multiple resutl sets.
@@ -130,7 +133,8 @@ openedHere  byte,auto
   code
  
   openedHere = self.OpenConnection()
-  if (retv = SQL_SUCCESS) 
+
+  if (openedHere <> Connection:Failed) 
     retv = self.odbc.execQuery(sqlStatement)    
   end 
 
@@ -145,7 +149,7 @@ openedHere  byte,auto
 ! this call does not return a result set
 !
 ! the withAuto parameter is used to tell the system this query is some type of 
-! insert statement and there is a generated key or index value in use
+! insert statement and there is a generated key of some type
 ! when calling to insert and get the generated value back set the paramerter to true
 ! and call with something like this 
 ! insert into schema.Table(col_one, colTwo) values(?, ?);
@@ -154,13 +158,14 @@ openedHere  byte,auto
 ! --------------------------------------------------------------------------
 FileMgrODBC.ExecuteNonQueryOut  procedure(*IDynStr sqlStatement, bool withAuto = false) !,virtual,sqlreturn
 
-retv        sqlReturn(SQL_SUCCESS)
+retv        sqlReturn(SQL_ERROR)
 openedHere  byte,auto
 rows        short,auto
 
   code
  
   openedHere = self.OpenConnection()
+
   if (openedHere <> Connection:Failed) 
     retv = self.odbc.execQueryOut(sqlStatement, self.Parameters)
     if (withAuto = true) 
@@ -181,13 +186,13 @@ rows        short,auto
 ! --------------------------------------------------------------------------
 FileMgrODBC.ExecuteQuery  procedure(*IDynStr sqlStatement, *queue q) !,virtual,sqlreturn
 
-retv        sqlReturn(SQL_SUCCESS)
+retv        sqlReturn(SQL_ERROR)
 openedHere  byte,auto
 
   code
  
   openedHere = self.OpenConnection()
-  if (retv = SQL_SUCCESS) 
+  if (openedHere <> Connection:Failed) 
     retv = self.odbc.execQuery(sqlStatement, self.columns, self.Parameters, q)
   end 
 
@@ -205,7 +210,7 @@ openedHere  byte,auto
 ! --------------------------------------------------------------------------
 FileMgrODBC.ExecuteQueryOut  procedure(*IDynStr sqlStatement, *queue q) !,virtual,sqlreturn
 
-retv        sqlReturn(SQL_SUCCESS)
+retv        sqlReturn(SQL_ERROR)
 openedHere  byte,auto
 
   code
@@ -227,13 +232,34 @@ openedHere  byte,auto
 ! end ExecuteQueryOut ------------------------------------------------------------- 
 
 ! --------------------------------------------------------------------------
+! calls a scalar function and retruns the returned value
+! --------------------------------------------------------------------------
+FileMgrODBC.ExecuteScalar procedure(*IDynStr scalarQuery) !,long,virtual
+
+retv        long,auto
+openedHere  byte,auto
+
+  code
+
+  openedHere = self.OpenConnection()
+  
+  if (openedHere <> Connection:Failed) 
+    retv = self.odbc.ExecQueryOut(scalarQuery, self.Parameters)
+  end 
+
+  self.closeConnection(openedHere)
+  
+  return retv
+! end ExcuteSclar --------------------------------------------------------
+
+! --------------------------------------------------------------------------
 ! execute the stored procedure input in the string 
 ! this stored procedure does not return a result set but 
 ! may have output parameters
 ! --------------------------------------------------------------------------
 FileMgrODBC.callSp procedure(string spName) !,virtual,sqlreturn
 
-retv        sqlReturn(SQL_SUCCESS)
+retv        sqlReturn(SQL_ERROR)
 openedHere  byte,auto
 
   code
@@ -254,7 +280,7 @@ openedHere  byte,auto
 ! --------------------------------------------------------------------------
 FileMgrODBC.callSp procedure(string spName, *queue q) !,virtual,sqlreturn
 
-retv       sqlReturn(SQL_SUCCESS)
+retv       sqlReturn(SQL_ERROR)
 openedHere byte,auto
 
   code
@@ -275,11 +301,27 @@ openedHere byte,auto
 ! end ExecuteSp ------------------------------------------------------------
 
 ! --------------------------------------------------------------------------
+! execute the stored procedure input in the string 
+! this stored procedure returns multiple result sets
+! 
+! this one needs to be overloaded in a derived instance
+! there will be more than one buffer is use and those buffers
+! may change for each result set.  the queue parameter will be used 
+! for the first result set.  the remaining result sets will have a buffer 
+! defined in the over loaded function
+! --------------------------------------------------------------------------
+FileMgrODBC.callSpMulti procedure(string spName, *queue q) !,virtual,sqlreturn
+
+  code
+  return SQL_ERROR
+! end callSpMulti ---------------------------------------------------------------  
+
+! --------------------------------------------------------------------------
 ! calls a scalar function and retruns the returned value
 ! --------------------------------------------------------------------------
-FileMgrODBC.ExecuteScalar procedure(*IDynStr scalarQuery) !,long,virtual
+FileMgrODBC.callScalar procedure(string  fxName) !,long,virtual
 
-retv        long,auto
+retv        long(SQL_ERROR)
 openedHere  byte,auto
 
   code
@@ -287,28 +329,7 @@ openedHere  byte,auto
   openedHere = self.OpenConnection()
   
   if (openedHere <> Connection:Failed) 
-    retv = self.odbc.ExecQueryOut(scalarQuery, self.Parameters)
-  end 
-
-  self.closeConnection(openedHere)
-  
-  return retv
-  ! end ExcuteSclar --------------------------------------------------------
-
-! --------------------------------------------------------------------------
-! calls a scalar function and retruns the returned value
-! --------------------------------------------------------------------------
-FileMgrODBC.callScalar procedure(string  scalarQuery) !,long,virtual
-
-retv        long,auto
-openedHere  byte,auto
-
-  code
-
-  openedHere = self.OpenConnection()
-  
-  if (openedHere <> Connection:Failed) 
-    retv = self.odbc.callScalar(scalarQuery, self.Parameters)
+    retv = self.odbc.callScalar(fxName, self.Parameters)
   end 
 
   self.closeConnection(openedHere)
@@ -317,13 +338,36 @@ openedHere  byte,auto
 ! end ExcuteSclar --------------------------------------------------------
 
 ! --------------------------------------------------------------------------
+! read the second, third, ... resutls sets.  this can be from a query 
+! or a stored procedure.  
+! --------------------------------------------------------------------------
+FileMgrODBC.readNextResult procedure(*queue q, *ColumnsClass cols) !,sqlreturn
+
+retv  sqlReturn,auto
+
+  code
+
+  ! move to the next result set
+  if (self.odbc.nextResultSet() = true)  
+     if (cols.bindColumns(self.conn.getHStmt()) = SQL_SUCCESS)
+       retv = self.odbc.readNextResult(q)
+     end
+  else 
+    ! no more results
+    retv = SQL_NO_DATA   
+  end
+
+  return retv
+! end readNextResult -------------------------------------------------------
+
+! --------------------------------------------------------------------------
 ! opens a connection for a call to the server, if the connection is not 
 ! currently open.  
 ! returns Connection:Opened if the connection was opened,
 ! Connection:CallerOpened if the connection is already opened
 ! and Connection:Failed if it was not open and the open attempt failed.
 ! --------------------------------------------------------------------------
-FileMgrODBC.OpenConnection procedure() ! ,bool,private 
+FileMgrODBC.OpenConnection procedure() ! ,byte
 
 res  sqlreturn,auto
 retv byte,auto
@@ -356,11 +400,11 @@ retv byte,auto
 ! if opened by some other calling code they are not cleared and the user must 
 ! do any needed clean up.  
 ! --------------------------------------------------------------------------
-FileMgrODBC.CloseConnection procedure(byte openedHere) !,private 
+FileMgrODBC.CloseConnection procedure(byte openedHere) 
 
   code
 
-  if (openedHere = Connection:opened) 
+  if (openedHere = Connection:opened)
     self.ClearInputs()
     self.conn.disconnect()
   end 

@@ -1,6 +1,5 @@
 !ABCIncludeFile
 
-
   omit('_EndOfInclude_',_FileMgrODBC_)  
 
 _FileMgrODBC_         equate(1)
@@ -27,7 +26,14 @@ defautlStrSize equate(50)
 ! ------------------------------------------------------------------------------
 FileMgrOdbc   class(FileManager),type,MODULE('FileMgrODBC.clw'),link('FileMgrODBC.clw',_ABCLinkMode_),dll(_ABCDllMode_)   
 
+! ---------------------------------------------------------------------
+! instance of a connection object that will be used by the file manager
+! ---------------------------------------------------------------------
 conn            &ODBCConnectionClType
+
+! ---------------------------------------------------------------------
+! instance of an ODBC object that will be used by the file manager
+! ---------------------------------------------------------------------
 odbc            &odbcClType
 
 ! ---------------------------------------------------------------------
@@ -85,7 +91,7 @@ SetEnviorment  procedure(*ODBCConnectionClType  conn)
 ! main issue with clearing is the use of multiple resutl sets.
 ! clearing the parameters would be fine, becasue the call has completed
 ! the columns may need to be cleared using a different queue in the second and 
-! following reqult sets and in some cases they may 
+! following result sets and in some cases they may 
 ! not need to be cleared, using the same queue for a like result set,  
 ! best to leave to the developer for the specific instance.
 ! ---------------------------------------------------------
@@ -109,16 +115,17 @@ ExecuteNonQuery  procedure(*IDynStr sqlStatement),virtual,sqlreturn
 
 ! --------------------------------------------------------------------------
 ! execute the sql statment input 
-! and get the value of an output parameter.  
+! and get the value of an output  or parameters.  
 ! this call does not return a result set
 !
 ! the withAuto parameter is used to tell the system this query is some type of 
-! insert statement and there is a generated key or index value in use
+! insert statement and there is a generated key of some type
 ! when calling to insert and get the generated value back set the paramerter to true
 ! and call with something like this 
 ! insert into schema.Table(col_one, colTwo) values(?, ?);
 ! select ? = scope_identity();
-! or use a guid or a sequence generator, adjust the parameters as needed
+! this will get the value of an identity column or 
+! use a guid or a sequence generator, whatever, just adjust the out parameter as needed
 ! --------------------------------------------------------------------------
 ExecuteNonQueryOut  procedure(*IDynStr sqlStatement, bool withAuto = false),virtual,sqlreturn
 
@@ -130,7 +137,7 @@ ExecuteQuery  procedure(*IDynStr sqlStatement, *queue q),virtual,sqlreturn
 
 ! --------------------------------------------------------------------------
 ! execute the sql statment input 
-! and get the value of an output parameter.  
+! and get the value of an output parameter(s).  
 ! this call also returns a result set
 ! 
 ! note, the result set is processed first then the out parameters are set
@@ -144,9 +151,9 @@ ExecuteQueryOut  procedure(*IDynStr sqlStatement, *queue q),virtual,sqlreturn
 ! the query should be formatted in this manner 
 ! select count(columName) from schemaName.TableName;
 ! or if parameters are used
-! select count(columName) from schemaName.TableName where someCol = paramOne and/or ...;
-! for scalar functions format theinput like this
-! select @retv = schema.FunctionLabel(...) 
+! select ? = count(columName) from schemaName.TableName where someCol = ? and/or ...;
+! for scalar functions format the input like this
+! select ? = schema.FunctionLabel(...) 
 ! bind any parameters for the function and bind the returned value 
 ! --------------------------------------------------------------------------
 ExecuteScalar procedure(*IDynStr scalarQuery),long,virtual
@@ -164,12 +171,30 @@ callSp procedure(string spName),virtual,sqlreturn
 callSp procedure(string spName, *queue q),virtual,sqlreturn
 
 ! --------------------------------------------------------------------------
+! execute the stored procedure input in the string 
+! this stored procedure returns multiple result sets
+! 
+! this one needs to be overloaded in a derived instance
+! there will be more than one buffer is use and those buffers
+! may change for each result set.  the queue parameter will be used 
+! for the first result set.  the remaining result sets will have a buffer 
+! defined in the over loaded function
+! --------------------------------------------------------------------------
+callSpMulti procedure(string spName, *queue q),virtual,sqlreturn
+
+! --------------------------------------------------------------------------
 ! execute the query input in the string 
 ! this query returns a result set of one row and one column
 !
 ! use this function to call a scalar function on the server
 ! --------------------------------------------------------------------------
-callScalar procedure(string scalarQuery),long,virtual
+callScalar procedure(string fxName),long,virtual
+
+! --------------------------------------------------------------------------
+! read the second, third, ... resutls sets.  this can be used from a query 
+! or a stored procedure.  
+! --------------------------------------------------------------------------
+readNextResult procedure(*queue q, *ColumnsClass cols),sqlreturn
 
 ! --------------------------------------------------------------------------
 ! opens a connection for a call to the server, if the connection is not 
@@ -178,7 +203,7 @@ callScalar procedure(string scalarQuery),long,virtual
 ! Connection:CallerOpened if the connection is already opened
 ! and Connection:Failed if it was not open and the open attempt failed.
 ! --------------------------------------------------------------------------
-OpenConnection procedure(),byte,private 
+OpenConnection procedure(),byte
 
 ! --------------------------------------------------------------------------
 ! closes  a connection
@@ -191,7 +216,7 @@ OpenConnection procedure(),byte,private
 ! if opened by some other calling code they are not cleared and the user must 
 ! do any needed clean up.  
 ! --------------------------------------------------------------------------
-CloseConnection procedure(byte openedHere),private 
+CloseConnection procedure(byte openedHere)
 
               end ! class
 

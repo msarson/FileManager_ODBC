@@ -12,20 +12,20 @@ retv   byte,auto
 
   code
 
-  free(demoQueue)
   fmOdbc.open()
   fmOdbc.useFile()
-
+  buffer(fmOdbc.file, 20)
   set(labelDemo)
 
   loop
-    if (fm.next() <> level:Benign)
-      break
+    if (fm.next() = level:Benign)
+      demoQueue.sysId = labelDemo.Sysid
+      demoQueue.Label = labelDemo.Label
+      demoQueue.amount = labelDemo.amount
+      add(demoQueue)
+    else 
+      break;
     end
-    demoQueue.sysId = labelDemo.Sysid
-    demoQueue.Label = labelDemo.Label
-    demoQueue.amount = labelDemo.amount
-    add(demoQueue)
   end
 
   fmOdbc.close()
@@ -34,7 +34,7 @@ retv   byte,auto
 ! end fileFill -----------------------------------------------
 
 ! --------------------------------------------------
-! fill a queue using the typcial file manager access
+! fill a queue using a prop:sql statement 
 ! --------------------------------------------------
 propSqlFill procedure()
 
@@ -42,12 +42,10 @@ retv   byte,auto
 
   code
 
-  free(demoQueue)
-
   open(labeldemo)
-  set(labeldemo)
-  labeldemo{prop:sql} = 'select ld.SysId, ld.Label, ld.amount from dbo.LabelDemo ld order by ld.Label desc'
-  stop(fileerror())
+  !buffer(labeldemo, 1000)
+  labeldemo{prop:sql} = 'select ld.SysId, ld.Label, ld.amount from dbo.LabelDemo ld order by ld.testCol desc'
+  
   loop
      next(labeldemo)
      if (errorcode() > 0)
