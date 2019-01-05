@@ -11,10 +11,10 @@ fileFill procedure(fileMgrODBC fmOdbc)
 retv   byte,auto
 
   code
-
+  
   fmOdbc.open()
   fmOdbc.useFile()
-  buffer(fmOdbc.file, 20)
+  buffer(fmOdbc.file, 2000)
   set(labelDemo)
 
   loop
@@ -24,6 +24,7 @@ retv   byte,auto
       demoQueue.amount = labelDemo.amount
       add(demoQueue)
     else 
+
       break;
     end
   end
@@ -43,21 +44,57 @@ retv   byte,auto
   code
 
   open(labeldemo)
-  !buffer(labeldemo, 1000)
-  labeldemo{prop:sql} = 'select ld.SysId, ld.Label, ld.amount from dbo.LabelDemo ld order by ld.testCol desc'
-  
+  buffer(labeldemo, 56000)
+  labeldemo{prop:sql} = 'select ld.SysId, ld.Label, ld.amount from dbo.LabelDemo ld'
+    
   loop
      next(labeldemo)
      if (errorcode() > 0)
       break
     end
+
     demoQueue.sysId = labelDemo.Sysid
     demoQueue.Label = labelDemo.Label
     demoQueue.amount = labelDemo.amount
     add(demoQueue)
+
   end
 
   close(labeldemo)
 
   return
 ! end propSqlFill -----------------------------------------------
+
+! --------------------------------------------------
+! fill a queue using a simple view definition
+! --------------------------------------------------
+ViewFill procedure(fileMgrODBC fmOdbc)
+
+retv   byte,auto
+
+  code
+  
+  fmOdbc.open()
+  fmOdbc.useFile()
+  
+  open(demoView)
+  set(demoView)
+  buffer(demoView, 20)
+
+  loop
+    next(demoView)
+    if (errorcode() > 0)
+      break
+    end
+    demoQueue.sysId = labelDemo.Sysid
+    demoQueue.Label = labelDemo.Label
+    demoQueue.amount = labelDemo.amount
+
+    add(demoQueue)
+  end
+
+  close(demoView)
+  fmOdbc.close()
+
+  return
+! end ViewFill -----------------------------------------------

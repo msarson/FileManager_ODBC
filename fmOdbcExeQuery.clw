@@ -28,7 +28,7 @@ retv      byte,auto
   retv = fmOdbc.ExecuteQuery(dynStr, demoQueue)
   
   return
-! end execureQury -----------------------------------------------------------
+! end execureQuery -----------------------------------------------------------
 
 ! -----------------------------------------------------------------
 ! executes a scalar style query that returns one row and one column
@@ -52,7 +52,7 @@ outParam  long,auto
 
   retv = fmOdbc.ExecuteScalar(dynStr)
 
-  message('Label Used as a filter was ' & fltLabel & ', the count of rows is ' &  outParam, 'Scalar Result')
+  message('Label Used as a filter was ' & fltLabel & ', the count of rows is ' &  outParam & '. One row was removed by the filter.', 'Scalar Result')
 
   return
 ! end execScalar ---------------------------------------------------
@@ -72,7 +72,7 @@ retv      byte,auto
   dynStr.cat('select ld.SysId, ld.Label, ld.amount, d.Label ' & |
              'from dbo.labelDemo ld ' & |
              'inner join dbo.Department d on ' & |
-             'd.ldSysId = ld.sysId ' & |
+               'd.ldSysId = ld.sysId ' & |
              'order by d.Label desc, ld.label asc;')
   
   fmOdbc.columns.AddColumn(demoQueue.sysId)

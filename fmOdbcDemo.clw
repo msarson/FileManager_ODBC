@@ -29,6 +29,7 @@
      module('fmOdbcFileMgr')
        fileFill(fileMgrODBC fmOdbc)
        propSqlFill()
+       viewFill(fileMgrODBC fmOdbc)
      end
 
      module('fmodbcExeQuery')
@@ -59,17 +60,18 @@
 numberTvpRows  equate(10000)
 
 ! number of rows in the initial page size for the page loading example 
-pageLoadSize       equate(5)
+pageLoadSize       equate(8)
+
+defaultStrLength   equate(60)
 
 ! -------------------------------------------------------------------------------------
 ! define the connection string(s)
-! one is used with the MSSQL demo, one is used with the ODBC demo
-! and one is used as part of the error messages (in_valid=demo)  
 ! -------------------------------------------------------------------------------------
-!Connstr     string('Driver={{SQL Server Native Client 11.0};server=dennishyperv\dev;Database=default_test;trusted_connection=yes;')
-!Connstr     string('dennishyperv\dev,default_test,,Driver={{ODBC Driver 13 for SQL Server};')
-Connstr     string('Driver={{ODBC Driver 13 for SQL Server};server=dennishyperv\dev;Database=default_test;trusted_connection=yes;')
-!Connstr     string('Driver={{ODBC Driver 13 for SQL Server};server=dennishyperv\dev;Database=default_test;trusted_connection=yes;in_valid=demo;')
+!Connstr     string('Driver={{SQL Server Native Client 11.0};server=dennishyperv\dev;Database=default_test;trusted_connection=yes;App=Phd;')
+!Connstr     string('dennishyperv\dev,default_test,,Driver={{ODBC Driver 13 for SQL Server};App=Phd')
+!Connstr     string('dennishyperv\dev,default_test,,Driver={{SQL Server Native Client 11.0};App=Phd')
+Connstr     string('Driver={{ODBC Driver 13 for SQL Server};server=dennishyperv\dev;Database=default_test;trusted_connection=yes;App=Phd')
+!Connstr     string('Driver={{ODBC Driver 13 for SQL Server};server=dennishyperv\dev;Database=default_test;trusted_connection=ye;in_valid=demo;;App=Phd')
 ! -------------------------------------------------------------------------------------
 
 ! -------------------------------------------------------------------------------------
@@ -79,32 +81,37 @@ LabelDemo   file,driver('ODBC'),owner(ConnStr),name('dbo.labeldemo')
 !LabelDemo   file,driver('MSSQL'),owner(ConnStr),name('dbo.labeldemo')
 Record        record,pre()
 SysId           long
-Label           string(60)
+Label           string(defaultStrLength)
 Amount          real
               end ! record
             end ! file
 ! -------------------------------------------------------------------------------------
 
+demoView  view(labelDemo)
+            project(labelDemo.SysId)
+            project(labelDemo.Label)
+            project(labelDemo.Amount)
+          end
 ! -------------------------------------------------------------------------------------
 ! queues used by the demo
 ! all queues are global
 ! -------------------------------------------------------------------------------------
 demoQueue   queue
 SysId         long
-Label         string(60)
+Label         string(defaultStrLength)
 Amount        real
-Department    string(60)
+Department    string(defaultStrLength)
 
             end
 ! ---------------------------------
 secondDemoQueue queue
 Amount            real
-Label             string(60)
+Label             string(defaultStrLength)
                 end
 ! ---------------------------------
 thirdDemoQueue queue
-name             string(60)
-department       string(60)
+name             string(defaultStrLength)
+department       string(defaultStrLength)
                end
 ! -------------------------------------------------------------------------------------
 
@@ -131,10 +138,7 @@ init            procedure(),virtual
 ! define an instance
 fm            &localFm
 
-! number of rows in the table
-! also used by the page load example
 totalRows     long
-
 ! --------------------------------------------------------------------------
 ! program entry point 
 ! --------------------------------------------------------------------------
@@ -149,13 +153,6 @@ totalRows     long
   return
 ! end program ------------------------------------------------------------
 
-
-! --------------------------------------------------------------------------
-! main procedure 
-! opens a simple window with a few controls used by the demo
-! the accept loop looks for what button was selected and calls 
-! some function
-! --------------------------------------------------------------------------
 main procedure()
 
 currentRow long(-1)
@@ -180,6 +177,7 @@ Window WINDOW('Demo'),AT(,,622,286),FONT('MS Sans Serif',8,,FONT:regular),GRAY
        BUTTON('Page Load, Previous'),AT(141,72,109,14),USE(?btnPrevPage)
        BUTTON('File Manager Loop'),AT(11,90,109,14),USE(?btnFileManager)
        BUTTON('Prop Sql'),AT(141,92,74,14),USE(?btnPropSql)
+       BUTTON('Fill from a View'),AT(220,92,109,14),USE(?btnViewFill)
        LIST,AT(15,114,363,83),USE(?demoList),FORMAT('71L(2)|M~System Id~@N20@125L(2)|M~Label~59L(2)|M~Amount~@N20.2@40L(2)|M~Departme' &|
            'nt~@s60@'),FROM(demoQueue)
        LIST,AT(391,114,214,85),USE(?List2),FORMAT('53L(2)|M~Amount~@N10.2@50L(2)|M~Label~@s50@'),FROM(secondDemoQueue)
@@ -263,17 +261,17 @@ Window WINDOW('Demo'),AT(,,622,286),FONT('MS Sans Serif',8,,FONT:regular),GRAY
         of ?btnFileManager
           freeQueues()        
           fileFill(fm)
+
         of ?btnPropSql
           freeQueues()        
           propSqlFill()
-       
-        of ?btnclearQ
-          stop(1)
-          freeQueues()
-          stop(2)
-          display()
-          stop(3)
 
+        of ?btnViewFill
+          freeQueues()
+          viewFill(fm)
+
+        of ?btnClearQ
+          freeQueues()
 
         of ?btnCancel
           break
@@ -321,7 +319,7 @@ fileManagerSetup procedure()
   fm.init(labelDemo, errors)
   
   fm.setEnviorment(conn)
-
+  
   return
 ! end fileMangerSetup -------------------------------------------------------------
 
@@ -380,7 +378,7 @@ x   long,auto
   loop x = 1 to numberRows
     demoQueue.SysId = 0
     demoQueue.Label = makeString()
-    demoQueue.Amount = random(10.0, 5000.0)
+    demoQueue.Amount = random(10, 5000)
     add(demoQueue)
   end 
   
