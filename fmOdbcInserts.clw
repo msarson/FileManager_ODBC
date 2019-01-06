@@ -57,7 +57,7 @@ retv       sqlReturn,auto
   ! 
   fmOdbc.parameters.AddOutParameter(identValue)
 
-  retv = fmOdbc.ExecuteNonQueryOut(dynStr, true)
+  retv = fmOdbc.ExecuteNonQueryOut(dynStr)
 
   message('Identity value from the insert ' & identValue, 'Insert a Row')
 

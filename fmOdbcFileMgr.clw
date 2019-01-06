@@ -14,7 +14,7 @@ retv   byte,auto
   
   fmOdbc.open()
   fmOdbc.useFile()
-  buffer(fmOdbc.file, 2000)
+  !buffer(fmOdbc.file, 2000)
   set(labelDemo)
 
   loop
@@ -44,7 +44,7 @@ retv   byte,auto
   code
 
   open(labeldemo)
-  buffer(labeldemo, 56000)
+  buffer(labeldemo, 2000)
   labeldemo{prop:sql} = 'select ld.SysId, ld.Label, ld.amount from dbo.LabelDemo ld'
     
   loop
@@ -76,9 +76,10 @@ retv   byte,auto
   
   fmOdbc.open()
   fmOdbc.useFile()
-  
+    
   open(demoView)
   set(demoView)
+
   buffer(demoView, 20)
 
   loop
@@ -86,6 +87,7 @@ retv   byte,auto
     if (errorcode() > 0)
       break
     end
+
     demoQueue.sysId = labelDemo.Sysid
     demoQueue.Label = labelDemo.Label
     demoQueue.amount = labelDemo.amount

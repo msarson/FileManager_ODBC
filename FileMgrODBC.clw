@@ -146,16 +146,8 @@ openedHere  byte,auto
 ! execute the sql statment input 
 ! and get the value of an output parameter.  
 ! this call does not return a result set
-!
-! the withAuto parameter is used to tell the system this query is some type of 
-! insert statement and there is a generated key of some type
-! when calling to insert and get the generated value back set the paramerter to true
-! and call with something like this 
-! insert into schema.Table(col_one, colTwo) values(?, ?);
-! select ? = scope_identity();
-! or use a guid or a sequence generator, adjust the parameters as needed
 ! --------------------------------------------------------------------------
-FileMgrODBC.ExecuteNonQueryOut  procedure(*IDynStr sqlStatement, bool withAuto = false) !,virtual,sqlreturn
+FileMgrODBC.ExecuteNonQueryOut  procedure(*IDynStr sqlStatement) !,virtual,sqlreturn
 
 retv        sqlReturn(SQL_ERROR)
 openedHere  byte,auto
@@ -167,7 +159,7 @@ rows        short,auto
 
   if (openedHere <> Connection:Failed) 
     retv = self.odbc.execQueryOut(sqlStatement, self.Parameters)
-    if (withAuto = true) 
+    if (retv = SQL_SUCCESS)
       if (self.odbc.nextResultSet() = true)
         retv = self.odbc.fetch()
       end

@@ -115,19 +115,10 @@ ExecuteNonQuery  procedure(*IDynStr sqlStatement),virtual,sqlreturn
 
 ! --------------------------------------------------------------------------
 ! execute the sql statment input 
-! and get the value of an output  or parameters.  
+! and get the value of an output parameter(s).  
 ! this call does not return a result set
-!
-! the withAuto parameter is used to tell the system this query is some type of 
-! insert statement and there is a generated key of some type
-! when calling to insert and get the generated value back set the paramerter to true
-! and call with something like this 
-! insert into schema.Table(col_one, colTwo) values(?, ?);
-! select ? = scope_identity();
-! this will get the value of an identity column or 
-! use a guid or a sequence generator, whatever, just adjust the out parameter as needed
 ! --------------------------------------------------------------------------
-ExecuteNonQueryOut  procedure(*IDynStr sqlStatement, bool withAuto = false),virtual,sqlreturn
+ExecuteNonQueryOut  procedure(*IDynStr sqlStatement),virtual,sqlreturn
 
 ! --------------------------------------------------------------------------
 ! execute the sql statment input 

@@ -27,6 +27,8 @@ retv      byte,auto
   ! do the actual read
   retv = fmOdbc.ExecuteQuery(dynStr, demoQueue)
   
+  dynStr.kill()
+
   return
 ! end execureQuery -----------------------------------------------------------
 
@@ -53,6 +55,8 @@ outParam  long,auto
   retv = fmOdbc.ExecuteScalar(dynStr)
 
   message('Label Used as a filter was ' & fltLabel & ', the count of rows is ' &  outParam & '. One row was removed by the filter.', 'Scalar Result')
+
+  dynStr.kill()
 
   return
 ! end execScalar ---------------------------------------------------
@@ -85,5 +89,7 @@ retv      byte,auto
 
   retv = fmOdbc.ExecuteQuery(dynStr, demoQueue)
 
+  dynStr.kill()
+  
   return
 ! end execureQury -----------------------------------------------------------
