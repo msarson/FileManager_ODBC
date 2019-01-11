@@ -57,7 +57,7 @@
 ! number of rows to be inserted using TVP
 ! adjust as needed, typically around a 1,000 is the high end
 ! MS recommends if more than 1,000 rows use the BCP
-numberTvpRows  equate(10000)
+numberTvpRows  equate(1000)
 
 ! number of rows in the initial page size for the page loading example 
 pageLoadSize       equate(8)
@@ -67,11 +67,18 @@ defaultStrLength   equate(60)
 ! -------------------------------------------------------------------------------------
 ! define the connection string(s)
 ! -------------------------------------------------------------------------------------
-!Connstr     string('Driver={{SQL Server Native Client 11.0};server=dennishyperv\dev;Database=default_test;trusted_connection=yes;App=Phd;')
-!Connstr     string('dennishyperv\dev,default_test,,Driver={{ODBC Driver 13 for SQL Server};App=Phd')
-!Connstr     string('dennishyperv\dev,default_test,,Driver={{SQL Server Native Client 11.0};App=Phd')
-Connstr     string('Driver={{ODBC Driver 13 for SQL Server};server=dennishyperv\dev;Database=default_test;trusted_connection=yes;App=Phd')
-!Connstr     string('Driver={{ODBC Driver 13 for SQL Server};server=dennishyperv\dev;Database=default_test;trusted_connection=ye;in_valid=demo;;App=Phd')
+!Connstr     string('Driver={{SQL Server Native Client 11.0};server=dennishyperv\dev;Database=default_test;trusted_connection=yes;App=lmno;')
+
+! ----------------------------
+! change set up function also
+! ----------------------------
+!Connstr     string('dennishyperv\dev,default_test,,Driver={{ODBC Driver 13 for SQL Server};App=lmno')
+!Connstr     string('dennishyperv\dev,default_test,,Driver={{SQL Server Native Client 11.0};App=lmno')
+
+Connstr     string('Driver={{ODBC Driver 13 for SQL Server};server=dennishyperv\dev;Database=default_test;trusted_connection=yes;App=lmno')
+!Connstr     string('Driver={{ODBC Driver 13 for SQL Server};server=dennishyperv\dev;Database=default_test;trusted_connection=yes;in_valid=demo;App=lmno')
+
+!Connstr     string('Driver={{ODBC Driver 17 for SQL Server};server=dennishyperv\dev;Database=default_test;trusted_connection=yes;App=lmno')
 ! -------------------------------------------------------------------------------------
 
 ! -------------------------------------------------------------------------------------
@@ -139,6 +146,7 @@ init            procedure(),virtual
 fm            &localFm
 
 totalRows     long
+
 ! --------------------------------------------------------------------------
 ! program entry point 
 ! --------------------------------------------------------------------------
@@ -160,30 +168,29 @@ filterStr  cstring('Willma')
 retv       sqlReturn,auto
 
 Window WINDOW('Demo'),AT(,,622,286),FONT('MS Sans Serif',8,,FONT:regular),GRAY
-       BUTTON('Execute a Query'),AT(11,14,109,14),USE(?btnExecQuery)
-       BUTTON('Execute Scalar'),AT(143,14,124,14),USE(?btnExecScalar)
-       BUTTON('Execute Query Two Tables'),AT(273,15,109,14),USE(?btnExecQueryTwo)
-       BUTTON('Call Stored Procedure (Connect)'),AT(11,32,109,14),USE(?btnSpCall)
-       BUTTON('Call Stored Procedure'),AT(143,32,124,14),USE(?btnSpNoConnect)
-       BUTTON('Call Scalar Function'),AT(271,32,99,14),USE(?btnCallScalar)
-       BUTTON('Stored Procedure W/Parameter'),AT(11,51,109,14),USE(?btnSpWithParam)
-       BUTTON('Stored Procedure w/out parameter'),AT(143,52,124,14),USE(?spWithOut)
-       BUTTON('Stored Procedure Result and Out Parameter'),AT(272,53,156,14),USE(?btnResultWithOut)
-       BUTTON('Call Stored Procedure W/Multi Results'),AT(377,32,135,14),USE(?btnMultiResults)
-       BUTTON('Insert Row Query'),AT(272,73,98,14),USE(?btnInsertRowQuery)
-       BUTTON('Insert Row w/Identity out'),AT(377,73,93,14),USE(?btnInsertRow)
-       BUTTON('Insert Rows using a TVP'),AT(475,73,109,14),USE(?btnInsertTvp)
-       BUTTON('Page Load, Next'),AT(11,70,109,14),USE(?btnNextPage)
-       BUTTON('Page Load, Previous'),AT(141,72,109,14),USE(?btnPrevPage)
-       BUTTON('File Manager Loop'),AT(11,90,109,14),USE(?btnFileManager)
-       BUTTON('Prop Sql'),AT(141,92,74,14),USE(?btnPropSql)
-       BUTTON('Fill from a View'),AT(220,92,109,14),USE(?btnViewFill)
+       BUTTON('Call Stored Procedure (Connect)'),AT(9,9,109,14),USE(?btnSpCall)
+       BUTTON('Call Stored Procedure'),AT(123,9,124,14),USE(?btnSpNoConnect)
+       BUTTON('Call Scalar Function'),AT(258,9,99,14),USE(?btnCallScalar)
+       BUTTON('Execute a Query'),AT(9,31,109,14),USE(?btnExecQuery)
+       BUTTON('Execute Scalar'),AT(123,31,124,14),USE(?btnExecScalar)
+       BUTTON('Execute Query Two Tables'),AT(258,31,109,14),USE(?btnExecQueryTwo)
+       BUTTON('Call Stored Procedure W/Multi Results'),AT(373,31,135,14),USE(?btnMultiResults)
+       BUTTON('Stored Procedure W/Parameter'),AT(9,50,109,14),USE(?btnSpWithParam)
+       BUTTON('Stored Procedure w/out parameter'),AT(123,50,124,14),USE(?spWithOut)
+       BUTTON('Stored Procedure Result and Out Parameter'),AT(258,50,156,14),USE(?btnResultWithOut)
+       BUTTON('Insert Row Query'),AT(9,72,98,14),USE(?btnInsertRowQuery)
+       BUTTON('Insert Rows using a TVP'),AT(123,72,109,14),USE(?btnInsertTvp)
+       BUTTON('Page Load, Next'),AT(258,72,109,14),USE(?btnNextPage)
+       BUTTON('Page Load, Previous'),AT(373,72,109,14),USE(?btnPrevPage)
+       BUTTON('File Manager Loop'),AT(9,92,109,14),USE(?btnFileManager)
+       BUTTON('Prop Sql'),AT(123,92,74,14),USE(?btnPropSql)
+       BUTTON('Fill from a View'),AT(258,92,109,14),USE(?btnViewFill)
        LIST,AT(15,114,363,83),USE(?demoList),FORMAT('71L(2)|M~System Id~@N20@125L(2)|M~Label~59L(2)|M~Amount~@N20.2@40L(2)|M~Departme' &|
            'nt~@s60@'),FROM(demoQueue)
        LIST,AT(391,114,214,85),USE(?List2),FORMAT('53L(2)|M~Amount~@N10.2@50L(2)|M~Label~@s50@'),FROM(secondDemoQueue)
        LIST,AT(15,206,263,52),USE(?List3),FORMAT('115L(2)|M~Name~50L(2)|M~Department~'),FROM(thirdDemoQueue)
-       BUTTON('Clear Queues'),AT(15,264,71,14),USE(?btnClearQ)
        BUTTON('&Done'),AT(163,262,36,14),USE(?btnCancel)
+       BUTTON('Clear Queues'),AT(15,264,71,14),USE(?btnClearQ)
      END
 
   code
@@ -228,9 +235,6 @@ Window WINDOW('Demo'),AT(,,622,286),FONT('MS Sans Serif',8,,FONT:regular),GRAY
           freeQueues()        
           callMulti(fm)
 
-        of ?btnInsertRow
-          freeQueues()        
-          insertRow(fm)
         of ?btnInsertRowQuery
           freeQueues()        
           InsertRowQuery(fm)

@@ -46,7 +46,5 @@ openedHere byte,auto
 
   retv = fm.ExecuteQuery(dynStr, demoQueue)
 
-  fm.ClearInputs()
-
   return 
 ! end fillSp ---------------------------------------------------

@@ -115,7 +115,7 @@ ExecuteNonQuery  procedure(*IDynStr sqlStatement),virtual,sqlreturn
 
 ! --------------------------------------------------------------------------
 ! execute the sql statment input 
-! and get the value of an output parameter(s).  
+! and get the value of an output parameter or parameters.  
 ! this call does not return a result set
 ! --------------------------------------------------------------------------
 ExecuteNonQueryOut  procedure(*IDynStr sqlStatement),virtual,sqlreturn
@@ -166,7 +166,7 @@ callSp procedure(string spName, *queue q),virtual,sqlreturn
 ! this stored procedure returns multiple result sets
 ! 
 ! this one needs to be overloaded in a derived instance
-! there will be more than one buffer is use and those buffers
+! there will be more than one buffer in use and those buffers
 ! may change for each result set.  the queue parameter will be used 
 ! for the first result set.  the remaining result sets will have a buffer 
 ! defined in the over loaded function

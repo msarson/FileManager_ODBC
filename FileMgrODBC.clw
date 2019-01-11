@@ -282,7 +282,6 @@ openedHere byte,auto
     retv = self.odbc.execSp(spName, self.columns, self.Parameters, q)
     if (retv <> SQL_SUCCESS)
       ! handle error messages
-      ! not sure how it will be done      
     end
   end
 

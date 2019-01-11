@@ -44,7 +44,7 @@ retv   byte,auto
   code
 
   open(labeldemo)
-  buffer(labeldemo, 2000)
+  !buffer(labeldemo, 2000)
   labeldemo{prop:sql} = 'select ld.SysId, ld.Label, ld.amount from dbo.LabelDemo ld'
     
   loop
@@ -80,7 +80,7 @@ retv   byte,auto
   open(demoView)
   set(demoView)
 
-  buffer(demoView, 20)
+  !buffer(demoView, 50000)
 
   loop
     next(demoView)

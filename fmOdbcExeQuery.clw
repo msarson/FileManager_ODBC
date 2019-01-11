@@ -83,13 +83,12 @@ retv      byte,auto
   fmOdbc.columns.AddColumn(demoQueue.Label)
   fmOdbc.columns.AddColumn(demoQueue.amount)
   ! column department is a memeber of the queue, not a member of the file
-  ! the column is from the joined table
   ! the table does not have a file definition in the application
   fmOdbc.columns.AddColumn(demoQueue.department)
 
   retv = fmOdbc.ExecuteQuery(dynStr, demoQueue)
 
   dynStr.kill()
-  
+
   return
 ! end execureQury -----------------------------------------------------------
