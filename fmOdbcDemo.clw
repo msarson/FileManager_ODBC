@@ -1,4 +1,4 @@
-   program
+    program
 
    include('aberror.inc'),once
    include('fileMgrOdbc.inc'),once
@@ -387,4 +387,3 @@ x   long,auto
   end 
   
   return
-
