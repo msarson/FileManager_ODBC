@@ -2,7 +2,7 @@
 
    include('aberror.inc'),once
    include('fileMgrOdbc.inc'),once
-   include('odbcCl.inc'),once
+   include('odbcExecCl.inc'),once
    include('odbcConn.inc'),once
 
    map

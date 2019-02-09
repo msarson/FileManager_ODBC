@@ -11,7 +11,8 @@ fileFill procedure(fileMgrODBC fmOdbc)
 retv   byte,auto
 
   code
-  
+
+   labelDemo{prop:trace}   = 1
   fmOdbc.open()
   fmOdbc.useFile()
   !buffer(fmOdbc.file, 2000)
