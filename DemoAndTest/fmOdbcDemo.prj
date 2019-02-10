@@ -1,0 +1,14 @@
+-- fmOdbcDemo
+#noedit
+#system win32
+#model clarion dll
+#pragma debug(vid=>full)
+#compile "fmOdbcDemo.clw"
+#compile "fmOdbcExeQuery.clw"
+#compile "fmOdbcInserts.clw"
+#compile "fmOdbcPageLoad.clw"
+#compile "fmOdbcSpCalls.clw"
+#compile "fmOdbcSpOut.clw"
+#compile "fmOdbcTVP.clw"
+#compile "osFile.clw"
+#link "fmOdbcDemo.exe"

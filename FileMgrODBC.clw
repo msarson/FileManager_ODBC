@@ -6,16 +6,6 @@
   include('odbcErrorCl.inc'),once
 
   map 
-!    module('odbc32')
-!      SQLAllocHandle(SQLSMALLINT HandleType, SQLHANDLE InputHandle, *SQLHANDLE OutputHandlePtr),SqlReturn,pascal,name('SQLAllocHandle')
-!      SQLFreeHandle(SqlSmallInt hType, SqlHandle h),long,pascal
-!      SQLFreeStmt(SQLHSTMT StatementHandle, SQLSMALLINT opt),sqlReturn,pascal,proc
-!      SQLSetEnvAttr(SQLHENV EnvironmentHandle, SQLINTEGER Attribute,  SQLPOINTER Value, SQLINTEGER StringLength),sqlReturn,pascal
-!      SQLNumResultCols(SQLHSTMT StatementHandle,  *SQLSMALLINT ColumnCountPtr),sqlReturn,pascal
-!      SetStmtAttr(SQLHSTMT StatementHandle, SQLINTEGER Attribute, SQLPOINTER ValuePtr, SQLINTEGER StringLength),sqlReturn,pascal,name('SQLSetStmtAttrW')
-!      SetStmtEvent(SQLHSTMT StatementHandle, SQLINTEGER Attribute, SQLPOINTER ValuePtr, SQLINTEGER StringLength),sqlReturn,pascal,name('SQLSetStmtAttrW')
-!      SQLSetConnectAttr(SQLHDBC ConnectionHandle,  SQLINTEGER    Attribute, SQLPOINTER ValuePtr, SQLINTEGER StringLength),sqlreturn,pascal,name('SQLSetConnectAttrW')
-!    end 
   end
 
   itemize(900),pre(fmErr)
