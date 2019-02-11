@@ -15,7 +15,7 @@ openedHere byte,auto
 
   code
 
-  writeLine(logFile, 'begin Call stored procedure')
+  writeLine(logFile, 'begin Call stored procedure with connect')
 
   fm.columns.AddColumn(demoQueue.sysId)
   fm.columns.AddColumn(demoQueue.Label)
@@ -40,12 +40,13 @@ openedHere byte,auto
   end
 
   if (retv = SQL_SUCCESS) or (retv = SQL_SUCCESS_WITH_INFO)
-    writeLine(logFile, 'end Call stored procedure with connect passed ')   
+    writeLine(logFile, 'Call stored procedure with connect passed ')   
   else 
-    writeLine(logFile, 'end Call stored procedure with connect failed')   
+    writeLine(logFile, 'Call stored procedure with connect failed') 
+    AllTestsPassed = false  
   end  
 
-  writeLine(logFile, 'end Call stored procedure')
+  writeLine(logFile, 'end Call stored procedure with connect')
 
   return 
 ! end fillSp ---------------------------------------------------
@@ -69,9 +70,10 @@ retv   byte,auto
   retv = fm.callSp('dbo.ReadLabelDemo', demoQueue)
 
   if (retv = SQL_SUCCESS) or (retv = SQL_SUCCESS_WITH_INFO)
-    writeLine(logFile, 'end Call stored procedure, default open passed ')   
+    writeLine(logFile, 'Call stored procedure, default open passed ')   
   else 
-    writeLine(logFile, 'end Call stored procedure, default open failed')   
+    writeLine(logFile, 'Call stored procedure, default open failed')  
+    AllTestsPassed = false 
   end  
 
   writeLine(logFile, 'end Call stored procedure, default open')
@@ -91,7 +93,7 @@ retv    byte,auto
 
   code
 
-  writeLine(logFile, 'begin Call stored procedure with filter parameter')
+  writeLine(logFile, 'begin Call stored procedure with a parameter')
 
   fmOdbc.columns.AddColumn(demoQueue.sysId)
   fmOdbc.columns.AddColumn(demoQueue.Label)
@@ -100,10 +102,17 @@ retv    byte,auto
   fmOdbc.Parameters.AddInParameter(inLabel)
 
   retv = fmOdbc.CallSp('dbo.ReadLabelDemoByLabel', demoQueue)
-  
+
+  if (retv = SQL_SUCCESS) or (retv = SQL_SUCCESS_WITH_INFO)
+    writeLine(logFile, 'Call stored procedure with a parameter passed ')   
+  else 
+    writeLine(logFile, 'Call stored procedure with a parameter failed')   
+    AllTestsPassed = false
+  end  
+
   fm.ClearInputs()
 
-  writeLine(logFile, 'end Call stored procedure with filter parameter')
+  writeLine(logFile, 'end Call stored procedure with a parameter')
 
   return
 ! end fillSpWithParam --------------------------------------------------
@@ -131,6 +140,7 @@ outParam  long,auto
     writeLine(logFile, 'Label Used as a filter was ' & inLabel & ', the ID value returned ' &  outParam)
   else 
     writeLine(logFile, 'Call Scalar function failed')  
+    AllTestsPassed = false
   end  
 
   fm.ClearInputs()
@@ -160,6 +170,7 @@ thirdCols  ColumnsClass
   code
 
   writeLine(logFile, 'begin Call multiple result sets, stored procedure')
+
   ! add the input parameter
   ! this is added before the sp call and is used by the sp
   ! once the sp call retruns the parameter can be thrown away
@@ -205,6 +216,23 @@ thirdCols  ColumnsClass
   end
 
   odbcFm.closeConnection(openedHere)
+
+  if (retv = SQL_SUCCESS) or (retv = SQL_SUCCESS_WITH_INFO)
+    writeLine(logFile, 'Call multiple result sets, stored procedure passed')
+  else 
+    writeLine(logFile, 'Call multiple result sets, stored procedure failed')  
+    AllTestsPassed = false
+  end  
+
+  if (records(secondDemoQueue) <= 0)
+    writeLine(logFile, 'The second result set was not read.')
+    AllTestsPassed = false
+  end 
+
+  if (records(thirdDemoQueue) <= 0)
+    writeLine(logFile, 'The third result set was not read.')
+    AllTestsPassed = false
+  end 
 
   writeLine(logFile, 'end Call multiple result sets, stored procedure')
 

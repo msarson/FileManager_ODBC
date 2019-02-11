@@ -45,13 +45,28 @@
      module('fmOdbcInserts')
        insertRow(fileMgrODBC fmOdbc)
        insertRowQuery(fileMgrODBC fmOdbc)
-       insertTvp(fileMgrODBC fmOdbc, long rows)
+       insertTvpNoTrans(fileMgrODBC fmOdbc, long rows)
+       insertTvp(fileMgrODBC fmOdbc, long rows, bool withTrans)
      end
 
      module('fmOdbcAsyn')
        callSpAsync(fileMgrODBC odbcFm)
     end
-   
+
+    module('osFile')
+       openFile(*cstring filename), handle
+       Write(handle f, string text)
+       WriteLine(handle f, string text)
+       readFileToEnd(*cstring fileName, handle f, *cstring sqlCode, long fSize) 
+       makeFile(*cstring filePath),handle
+       CloseFile(handle f) 
+       findFileSize(handle f),long
+     end
+  
+    module('createTestDatabase')
+      createTestDatabase()
+    end 
+
    end ! map
 
 ! number of rows to be inserted using TVP
@@ -147,16 +162,87 @@ fm            &localFm
 
 totalRows     long
 
+logFile       handle
+logFileName   cstring('testResults.log')
+
+demoFlt       cstring('Willma')
+
+AllTestsPassed  bool
+alwaysShowLog   bool
 ! --------------------------------------------------------------------------
 ! program entry point 
 ! --------------------------------------------------------------------------
   code
 
+  AllTestsPassed = true
+  alwaysShowLog = true
+
+  logFile = makeFile(logFileName)
+  
+  WriteLine(logFile, 'Begin Tests for the File Manager ODBC.')
+
   ! set things up
   odbcSetup()
   fileManagerSetup()
+
+  createTestDatabase()
+
+  executeQuery(fm)
+  freeQueues()
+  
+  execScalar(fm, demoFlt)
+  freeQueues()
+ 
+  executeQueryTwo(fm)
+  freeQueues()
+
+  fillSp(fm)
+  freeQueues()
+
+  fillSpNoOpen(fm)
+  freeQueues()
+
+  fillSpWithParam(fm)
+  freeQueues()
+
+  callScalar(fm)
+  freeQueues()
+
+  callMulti(fm)
+  freeQueues()
+  
+  spWithOut(fm)
+  freeQueues()
+
+  spResutSetWithOut(fm)
+  freeQueues()
+
+  insertRow(fm)
+  freeQueues()
+
+  insertRowQuery(fm)
+  freeQueues()
+
+  insertTvpNoTrans(fm, numberTvpRows)
+  freeQueues()
+
+  insertTvp(fm, numberTvpRows, true)
+  freeQueues()
+
+  if (AllTestsPassed = false) 
+    writeLine(logFile, 'One or more tests failed.')
+  else 
+    writeLine(logFile, 'All test Passed.')
+  end 
+
+  CloseFile(logFile)
+  
+  if (AllTestsPassed = false) or (alwaysShowLog = true)
+    run('notepad.exe C:\git_repo\FileManager_ODBC\DemoAndTest\testresults.log')
+  end
+
   ! and go
-  main()
+  !main()
 
   return
 ! end program ------------------------------------------------------------
@@ -240,7 +326,7 @@ Window WINDOW('Demo'),AT(,,622,286),FONT('MS Sans Serif',8,,FONT:regular),GRAY
           InsertRowQuery(fm)
         of ?btnInsertTvp
           fillQueue(numberTvpRows)
-          insertTvp(fm, numberTvpRows)
+          insertTvp(fm, numberTvpRows, false)
           freeQueues()
           
         of ?btnNextPage
@@ -322,7 +408,7 @@ fileManagerSetup procedure()
   fm.init()
   fm.init(labelDemo, errors)
   
-  fm.setEnviorment(conn)
+  fm.SetEnvironment(conn)
   
   return
 ! end fileMangerSetup -------------------------------------------------------------

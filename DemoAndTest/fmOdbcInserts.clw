@@ -1,7 +1,11 @@
    member('fmOdbcDemo')
 
    map
+     readCurrentCount(fileMgrODBC fmOdbc),long
+     deletenewRow(fileMgrODBC fmOdbc)
    end
+   
+   include('odbcTranscl.inc'),once
 
 ! ----------------------------------------------------------------------
 ! insert a row into a table using a stored procedure.  Read the value 
@@ -12,19 +16,41 @@ insertRow procedure(fileMgrODBC fmOdbc)
 newLabel  cstring('Will Scarlet')
 newAmount real(87.41)
 
-identValue long,auto
-
-retv       sqlReturn,auto
+identValue      long,auto
+startRowCount   long,auto
+endRowCount     long,auto
+retv            sqlReturn,auto
 
   code
 
+  writeLine(logFile, 'begin Insert Row.')
+
+  startRowCount = readCurrentCount(fmOdbc)
+  
   fmOdbc.parameters.AddInParameter(newLabel)
   fmOdbc.parameters.AddInParameter(newAmount)
   fmOdbc.parameters.AddOutParameter(identValue)
 
   retv = fmOdbc.callSp('dbo.addLabelRow')
 
-  message('Identity value from the insert ' & identValue, 'Insert a Row')
+  fmOdbc.clearInputs()
+  endRowCount = readCurrentCount(fmOdbc)
+  
+  if (startRowCount + 1 = endRowCount)
+    writeLine(logFile, 'Insert Row passed, number out was ' & endRowCount & '.')
+  else 
+    writeLine(logFile, 'Insert Row failed, number out was ' & endRowCount & '.')
+    allTestsPassed = false
+  end 
+  
+  deletenewRow(fmOdbc)
+  startRowCount = readCurrentCount(fmOdbc)
+  if (startRowCount <> 6) 
+    writeLine(logFile, 'The new row was not deleted, test failed.')
+    allTestsPassed = false
+  end 
+
+  writeLine(logFile, 'End Insert Row.')
 
   return
 ! end InsertRow ----------------------------------------------------------------------
@@ -36,6 +62,9 @@ retv       sqlReturn,auto
 ! ----------------------------------------------------------------------
 insertRowQuery procedure(fileMgrODBC fmOdbc)
 
+startRowCount   long,auto
+endRowCount     long,auto
+
 dynStr     &IDynStr
 ! values for the new row
 newLabel   cstring('Hank smith')
@@ -45,6 +74,11 @@ identValue long,auto
 retv       sqlReturn,auto
 
   code
+
+  writeLine(logFile, 'begin Insert Row from query.')
+
+  startRowCount = readCurrentCount(fmOdbc)
+  
 
   dynStr &= newDynStr()
   dynStr.cat('insert into dbo.LabelDemo(label, amount) ' & |
@@ -58,17 +92,64 @@ retv       sqlReturn,auto
   fmOdbc.parameters.AddOutParameter(identValue)
 
   retv = fmOdbc.ExecuteNonQueryOut(dynStr)
+  fmOdbc.clearInputs()
+  endRowCount = readCurrentCount(fmOdbc)
+  
+  if (startRowCount + 1 = endRowCount)
+    writeLine(logFile, 'Insert Row passed, number out was ' & endRowCount & '.')
+  else 
+    writeLine(logFile, 'Insert Row failed, number out was ' & endRowCount & '.')
+    allTestsPassed = false
+  end 
+  
+  deletenewRow(fmOdbc)
+  startRowCount = readCurrentCount(fmOdbc)
+  if (startRowCount <> 6) 
+    writeLine(logFile, 'The new row was not deleted, test failed.')
+    allTestsPassed = false
+  end 
 
-  message('Identity value from the insert ' & identValue, 'Insert a Row')
+  writeLine(logFile, 'End  Insert Row from query.')
 
   return
 ! end InsertRowQuery ----------------------------------------------------------------------
+
+insertTvpNoTrans procedure(fileMgrODBC fmOdbc, long rows)
+
+startRowCount   long,auto
+endRowCount     long,auto
+
+  code 
+
+  writeLine(logFile, 'begin insert TVP No Transaction.')
+
+  startRowCount = readCurrentCount(fmOdbc)
+  
+  insertTvp(fmOdbc, rows, false)
+ 
+  endRowCount = readCurrentCount(fmOdbc)
+  
+  if (endRowCount <> startRowCount + rows) 
+    writeLine(logFile, 'Row count after Insert TVP in not correct, test failed.')
+    allTestsPassed = false
+  end   
+
+  deletenewRow(fmOdbc)
+  startRowCount = readCurrentCount(fmOdbc)
+  if (startRowCount <> 6) 
+    writeLine(logFile, 'The new row was not deleted, test failed.')
+    allTestsPassed = false
+  end 
+
+  writeLine(logFile, 'End Insert with TVP No transaction.')
+
+  return
 
 ! ------------------------------------------------------------------------------
 ! insert some number of rows into the datbase using a table valued parameter TVP
 ! the demo inserts a 1,000 rows
 ! ------------------------------------------------------------------------------
-insertTvp  procedure(fileMgrODBC fmOdbc, long rows)
+insertTvp  procedure(fileMgrODBC fmOdbc, long rows, bool withTrans)
 
 !sqlStr        sqlStrClType 
 retv          sqlReturn,auto
@@ -86,6 +167,7 @@ openedhere     byte,auto
 parameters     ParametersClass
 tablevalues    ParametersClass
 typeName       cstring('LabelDemoType')
+trans           odbcTransactionClType
 
   code
 
@@ -98,11 +180,18 @@ typeName       cstring('LabelDemoType')
   end 
 
   writeLine(logFile, 'begin Call Insert TVP')
+  if (withTrans = true) 
+    writeLine(logFile, 'Insert TVP with Transaction')
+  end 
 
   t = clock()  
 
   openedhere = fmOdbc.openConnection()
-  
+  if (withTrans = true) 
+    trans.init(fmOdbc.conn.gethdbc())
+    trans.beginTrans()
+  end 
+
   hStmt = fmOdbc.conn.gethStmt()
 
   parameters.Init()
@@ -124,6 +213,11 @@ typeName       cstring('LabelDemoType')
 
   retv = fmOdbc.odbccall.execSp(hStmt, 'dbo.InsertaTable', Parameters)
 
+  ! if with trans is true roll it back
+  if (withTrans = true) 
+    trans.rollback()
+  end 
+
   fmOdbc.closeConnection(openedhere)
 
   if (retv = SQL_SUCCESS) or (retv = SQL_SUCCESS_WITH_INFO)
@@ -132,9 +226,79 @@ typeName       cstring('LabelDemoType')
   else 
     fmOdbc.ShowErrors()
     writeLine(logFile, 'Insert TVP failed')
+    allTestsPassed = false
+  end 
+
+  ! if with trans is true roll it back
+  ! do a count to be sure the inserted rows were removed
+  if (withTrans = true) 
+    if (readCurrentCount(fmOdbc) <> 6)
+      writeLine(logFile, 'The rollback failed.')
+      allTestsPassed = false
+    end 
   end 
 
   writeLine(logFile, 'end Call Insert TVP')
+  if (withTrans = true) 
+    writeLine(logFile, 'Insert TVP with Transaction')
+  end 
 
   return
 ! end insertTvp --------------------------------------------------------------------------------   
+
+readCurrentCount procedure(fileMgrODBC fmOdbc)
+
+dynStr    &IDynStr
+retv      long,auto
+x         long,auto
+!trans     odbcTransactionClType
+outParam  long,auto
+
+  code
+ 
+  dynStr &= newDynStr()  
+  dynStr.cat('select ? = count(*) from dbo.LabelDemo ld;')
+
+  ! note the order of the bindings, the out parameter and 
+  ! then the in parameter, the oder is important for the palce holders
+  ! in the query 
+  fmOdbc.parameters.AddOutParameter(outParam)
+
+  retv = fmOdbc.ExecuteScalar(dynStr)
+  
+  if (retv = SQL_SUCCESS) or (retv = SQL_SUCCESS_WITH_INFO)
+    retv = outparam
+  end 
+
+  dynStr.kill()
+  fmOdbc.clearInputs()
+  freeQueues()
+
+  return retv
+! ------------------------------------------------------------------------------------------------------  
+
+deletenewRow procedure(fileMgrODBC fmOdbc)
+
+dynStr    &IDynStr
+retv      byte,auto
+x         long,auto
+!trans     odbcTransactionClType
+outParam  long,auto
+
+  code
+ 
+  dynStr &= newDynStr()  
+  dynStr.cat('delete from dbo.LabelDemo where sysId > 6;')
+
+  ! note the order of the bindings, the out parameter and 
+  ! then the in parameter, the oder is important for the palce holders
+  ! in the query 
+  fmOdbc.parameters.AddOutParameter(outParam)
+
+  retv = fmOdbc.ExecuteScalar(dynStr)
+    
+  dynStr.kill()
+  fmOdbc.clearInputs()
+  
+  return
+! ------------------------------------------------------------------------------------------------------  

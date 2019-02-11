@@ -4,9 +4,13 @@
    end
 
    include('odbcTranscl.inc'),once
+
+expected   long
+actual     long
+
 ! -------------------------------------------------------------------
 ! execute a single query and place the result set into a queue
-! the queue is displayed in a list box on the screen
+! the defaults for the table is six rows. 
 ! -------------------------------------------------------------------
 executeQuery procedure(fileMgrODBC fmOdbc)
 
@@ -20,52 +24,26 @@ trans     odbcTransactionClType
   writeLine(logFile, 'Begin Execute Query new')
 
   dynStr &= newDynStr()
-  dynStr.cat('select ld.SysId, ld.Label, ld.amount, ld.bitFlag, ld.guid, ld.bigChar, ld.bigBin ' & |
+  dynStr.cat('select ld.SysId, ld.Label, ld.amount ' & |
              'from dbo.LabelDemo ld ' & |
-             ' where ld.SysId = 8 ' & |
              ' order by ld.SysId;')
 
   ! add the colums of the queue that will be read by the query
   fmOdbc.columns.AddColumn(demoQueue.SysId)
   fmOdbc.columns.AddColumn(demoQueue.Label)
   fmOdbc.columns.AddColumn(demoQueue.amount)
-  fmOdbc.columns.AddBooleanColumn(demoQueue.bitFlag, true)
-  fmOdbc.columns.AddColumn(demoQueue.guid)
-  fmOdbc.columns.AddLargeColumn(SQL_LONGVARCHAR, 6)
-  !demoQueue.bigBin &= blobFile.testBlob
-  fmOdbc.columns.AddLargeColumn(SQL_LONGVARBINARY, 7) !demoQueue.bigBin)
-
-  fmOdbc.conn.Connect()
-  trans.init(fmOdbc.conn.getHdbc())
-  trans.setIsolationSerializable()
 
   ! do the actual read
   retv = fmOdbc.ExecuteQuery(dynStr, demoQueue)
 
-  loop x = 1 to records(fmOdbc.columns.colb)
-    get(fmOdbc.columns.colb, x)
-    case fmOdbc.columns.colb.colType
-      of SQL_LONGVARCHAR
-        demoQueue.bigChar &= fmOdbc.Columns.colb.charHolder
-      of SQL_LONGVARBINARY
-       demoQueue.bigBin &= fmOdbc.Columns.colb.binaryHolder
-    end ! case
-    put(demoQueue)
-  end 
-
   fmOdbc.clearInputs()
-  
   dynStr.kill()
-  trans.commit()
-  
-  fmOdbc.Conn.disconnect()
 
-  stop(demoQueue.bigBin)  
-  stop(demoQueue.bigchar)  
   if (retv = SQL_SUCCESS)
     writeLine(logFile, 'Execute Query, passed and returned ' & records(demoQueue) & ' Rows.')
   else 
-    writeLine(logFile, 'Execute Query, Failed')  
+    writeLine(logFile, 'Execute Query, Failed') 
+    AllTestsPassed = false 
   end 
 
   writeLine(logFile, 'end Execute Query')
@@ -75,7 +53,8 @@ trans     odbcTransactionClType
 
 ! -----------------------------------------------------------------
 ! executes a scalar style query that returns one row and one column
-! the value returned by the scalar is shown in a message box
+! the query filters out some rows and retuens a count of the 
+! remaining rows.
 ! -----------------------------------------------------------------
 execScalar procedure(fileMgrODBC fmOdbc, *cstring fltLabel)
 
@@ -91,7 +70,8 @@ outParam  long,auto
   dynStr.cat('select ? = count(*) from dbo.LabelDemo ld where ld.Label <> ?;')
 
   ! note the order of the bindings, the out parameter and 
-  ! then the in parameter
+  ! then the in parameter, the oder is important for the palce holders
+  ! in the query 
   fmOdbc.parameters.AddOutParameter(outParam)
   fmOdbc.parameters.AddInParameter(fltLabel)
 
@@ -105,6 +85,7 @@ outParam  long,auto
     writeLine(logFile, 'Execute Scalar Query, passed')
   else 
     writeLine(logFile, 'Execute Scalar Query, Failed')  
+    AllTestsPassed = false
   end 
 
   writeLine(logFile, 'end Execute Scalar Query')
@@ -114,7 +95,8 @@ outParam  long,auto
 
 ! -------------------------------------------------------------------
 ! execute a query with a single join clause and place the result set into 
-! a queue, the queue is displayed in a list box on the screen
+! a queue,
+! the department table contains four rows for the default
 ! -------------------------------------------------------------------
 executeQueryTwo procedure(fileMgrODBC fmOdbc)
 
@@ -123,7 +105,7 @@ retv      byte,auto
 
   code
 
-  writeLine(logFile, 'begin Execute Query with a simple join')
+  writeLine(logFile, 'begin ExecuteQueryTwo')
 
   dynStr &= newDynStr()
   dynStr.cat('select ld.SysId, ld.Label, ld.amount, d.Label ' & |
@@ -135,21 +117,21 @@ retv      byte,auto
   fmOdbc.columns.AddColumn(demoQueue.sysId)
   fmOdbc.columns.AddColumn(demoQueue.Label)
   fmOdbc.columns.AddColumn(demoQueue.amount)
-  ! column department is a memeber of the queue, not a member of the file
-  ! the table does not have a file definition in the application
-  !fmOdbc.columns.AddColumn(demoQueue.department)
+  fmOdbc.columns.AddColumn(demoQueue.department)
 
   retv = fmOdbc.ExecuteQuery(dynStr, demoQueue)
 
   dynStr.kill()
+  fmOdbc.clearInputs()
 
-if (retv = SQL_SUCCESS)
-    writeLine(logFile, 'simple join Query, passed')
+  if (retv = SQL_SUCCESS)
+    writeLine(logFile, 'ExecuteQueryTwo, a simple join, passed and retuned ' & records(demoQueue) & ' rows.')
   else 
-    writeLine(logFile, 'simple join Query, Failed')  
+    writeLine(logFile, 'ExecuteQueryTwo, a simple join, Failed')  
+    AllTestsPassed = false
   end 
 
-  writeLine(logFile, 'end Execute Query with a simple join')
+  writeLine(logFile, 'end ExecuteQueryTwo')
 
   return
 ! end execureQury -----------------------------------------------------------

@@ -16,16 +16,26 @@ rowCount long,auto
 
   code
 
+  writeLine(logFile, 'begin Stored Procedure with output parameter')
+
   fmOdbc.parameters.addOutParameter(rowCount)
 
   retv = fmOdbc.callSp('dbo.CountDemoLabels')
 
-  Message('There are ' & rowCount & ' rows in the table.', 'Number Rows')
-  
   fmOdbc.ClearInputs()
 
   totalRows = rowCount
-  
+
+  if (retv = SQL_SUCCESS)
+    writeLine(logFile, 'Stored Procedure with output parameter passed, number out was ' & rowCount & '.')
+  else 
+    writeLine(logFile, 'Stored Procedure with output parameter, Failed')  
+    AllTestsPassed = false
+  end 
+
+
+  writeLine(logFile, 'End Stored Procedure with output parameter')
+
   return
 ! end spWithOut ---------------------------------------------------
 
@@ -36,6 +46,8 @@ rowCount   long,auto
 openedHere byte,auto
 
   code
+
+  writeLine(logFile, 'Begin  Stored Procedure with result set and output parameter')
 
   ! set to a value outside the range of the count 
   ! function, just so we can see the value was actually set
@@ -55,15 +67,24 @@ openedHere byte,auto
     if (retv = SQL_SUCCESS) or (retv = SQL_SUCCESS_WITH_INFO)
       retv = fmOdbc.odbcCall.nextResultSet(fmOdbc.conn.getHstmt())
       ! out parameter is now filled
+    else 
+      writeLine(logFile, 'Initial read of result set failed.')  
+      AllTestsPassed = false
     end
     conn.Disconnect()
   end
 
-  Message('There are ' & rowCount & ' rows in the table.', 'Number Rows')
-
+  if (retv = SQL_SUCCESS) or (retv = SQL_SUCCESS_WITH_INFO)
+    writeLine(logFile, 'Stored Procedure with result set and output parameter passed')
+    writeLine(logFile, 'Outputparameter value was ' & rowCount & '.')
+  else 
+    writeLine(logFile, 'Stored Procedure with result set and output parameter failed')
+  end 
  
   fmOdbc.ClearInputs()
  
+  writeLine(logFile, 'End Stored Procedure with result set and output parameter')
+
   return
 ! end spWithOut ---------------------------------------------------
 
