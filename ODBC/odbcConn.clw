@@ -162,8 +162,6 @@ retv            sqlReturn
 
 ! --------------------------------------------------------------------------
 ! connect to the database 
-! the output connection is not used but is converted as demo of using wide strings 
-! out form API calls.
 ! 
 ! if the statement parameter is true, the default, a statement handle is allocated 
 ! if false then the statement handle will need t obe allocated from the calling code
