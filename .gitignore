@@ -8,3 +8,17 @@ DemoAndTest/fmOdbcDemo.MAP
 DemoAndTest/fmOdbcDemo.BKP
 DemoAndTest/fmOdbcDemo.BAK
 DemoAndTest/D32.LOG
+BCP/claBcp/Debug/
+BCP/claBcp/Release/
+BCP/Debug/
+BCP/Release/
+BCP/claBcp/dllmain.cpp
+BCP/claBcp/claBcp.vcxproj.user
+BCP/claBcp/claBcp.vcxproj.filters
+BCP/claBcp/claBcp.cpp
+BCP/claBcp.sln
+BCP/.vs/claBcp/v15/ipch/9629a7b13d05db19.ipch
+BCP/.vs/claBcp/v15/ipch/7132ccedf376ec89.ipch
+BCP/.vs/claBcp/v15/Browse.VC.opendb
+BCP/.vs/claBcp/v15/Browse.VC.db
+BCP/.vs/claBcp/v15/.suo
