@@ -486,6 +486,7 @@ FileMgrODBC.CloseConnection procedure(byte openedHere)
   return
 ! end closeConnection ------------------------------------------------------
 
+
 fileMgrOdbc.getConnectionError procedure() 
  
    code
@@ -525,3 +526,68 @@ msgtext   string(3000)
 
   return
 ! end ShowErrors ----------------------------------------------------------
+
+! ----------------------------------------------------------------------
+! allocates the bcp instance for the file manager and 
+! calls the init_bcp function to do some set up
+! ----------------------------------------------------------------------
+fileMgrOdbc.init_Bcp    procedure() !,byte
+
+retv    byte,auto
+
+  code 
+
+  self.bcp &= new(bcpType)
+
+  retv = self.bcp.init_Bcp()
+
+  return retv
+! end init_Bcp ---------------------------------------------------------
+
+! ----------------------------------------------------------------------
+! gets a connection to the database and sets the required connection
+! attributes used by the BCP
+! ----------------------------------------------------------------------
+FileMgrODBC.connectBcp procedure() !,byte
+
+retv   byte,auto
+
+  code
+
+  retv = self.bcp.connect(self.conn.connStr.connectionString())
+
+  return retv  
+! end connectBcp ---------------------------------------------------
+
+! ----------------------------------------------------------------------
+! callst he bcp disconnect function to free the handles and 
+! disposes the instance 
+! ----------------------------------------------------------------------
+FileMgrODBC.disconnectBcp procedure() !,long
+
+retv   long
+
+  code
+
+  self.bcp.disconnect()
+  dispose(self.bcp) 
+  self.bcp &= null
+
+  return
+! end disconnectBcp ------------------------------------------------
+
+! ----------------------------------------------------------------------
+! sets the number of rows to be used for a the batch during the bcp operations
+! the default is zero, no batch size, set as needed after testing for 
+! best performance
+! ----------------------------------------------------------------------
+FileMgrODBC.setBcpBatchSize procedure(long rows)
+
+  code 
+
+  if (~self.bcp &= null) 
+    self.bcp.setBcpBatchSize(rows)
+  end 
+
+  return
+! end  setBcpBatchSize ------------------------------------------------ 

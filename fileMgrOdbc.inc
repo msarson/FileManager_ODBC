@@ -13,7 +13,8 @@ _FileMgrODBC_         equate(1)
   include('dynstr.inc'),once
   include('odbcExecCl.inc'),once
   include('odbcCall.inc'),once
-  
+  include('bcpType.inc'),once
+
 odbcErrorValue equate(byte)
 defautlStrSize equate(50)
 
@@ -46,6 +47,8 @@ conn            &ODBCConnectionClType
 ! ---------------------------------------------------------------------
 odbcExec        &odbcExecType
 odbcCall        &odbcCallType
+bcp             &bcpType
+
 ! ---------------------------------------------------------------------
 ! instance of the columns class.
 ! add the columns that will be filled from the result set that  the 
@@ -239,6 +242,35 @@ CloseConnection procedure(byte openedHere)
 getConnectionError procedure() 
 
 ShowErrors procedure() 
+
+! -------------------------------------------------------------------
+! BCP methods 
+! -------------------------------------------------------------------
+
+! ----------------------------------------------------------------------
+! allocates the bcp instance for the fiel manager and 
+! calls the init_bcp function to do some set up
+! ----------------------------------------------------------------------
+init_Bcp    procedure(),byte
+
+! ----------------------------------------------------------------------
+! gets a connection to the database and sets the required connection
+! attributes used by the BCP
+! ----------------------------------------------------------------------
+connectBcp procedure(),byte
+
+! ----------------------------------------------------------------------
+! calls the bcp disconnect function to free the handles and 
+! disposes the instance 
+! ----------------------------------------------------------------------
+disconnectBcp  procedure()
+
+! ----------------------------------------------------------------------
+! sets the number of rows to be used for a the batch during the bcp operations
+! the default is zero, no batch size, set as needed after testing for 
+! best performance
+! ----------------------------------------------------------------------
+setBcpBatchSize procedure(long rows)
 
               end ! class
 
