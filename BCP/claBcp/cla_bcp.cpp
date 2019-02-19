@@ -17,7 +17,7 @@ DllExport HENV ClaBcpInit() {
     hEnv = 0;
   }
   else {
-    result = SQLSetEnvAttr(hEnv, SQL_ATTR_ODBC_VERSION, (SQLPOINTER)SQL_OV_ODBC3, SQL_IS_INTEGER);
+    result = SQLSetEnvAttr(hEnv, SQL_ATTR_ODBC_VERSION, (SQLPOINTER)SQL_OV_ODBC3_80, SQL_IS_INTEGER);
   }
 
   return hEnv;

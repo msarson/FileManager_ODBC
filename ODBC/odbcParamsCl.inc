@@ -211,8 +211,6 @@ AddOutParameter procedure(*sreal varPtr),sqlReturn,proc
 ! --------------------------------------------------------------------------------
 FillPlaceHolders procedure(sqlStrClType sqlCode, long startPos = 1),long
 
-! these are for the name values, not yet used
-afindByParamName  procedure(string pName),sqlReturn
                     end
 
   _EndOfInclude_

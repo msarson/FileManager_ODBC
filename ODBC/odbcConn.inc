@@ -25,7 +25,7 @@ hEnv                   &EnvHandle
 hDbc                   &OdbcHandleClType,private ! db connection handle
 hStmt                  &OdbcStmtHandleClType,private! statement handle
 
-connStr                &baseConnStrClType,private ! instance to hold the connection string
+connStr                &baseConnStrClType ! instance to hold the connection string
 
 ! -------------------------------------------------------
 ! some getters, no setters.  code will need to query these 

@@ -63,6 +63,10 @@
        findFileSize(handle f),long
      end
   
+    module('fmOdbcBcp')
+      fmOdbcBcpUpdate(fileMgrODBC fmOdbc)  
+    end 
+
     module('createTestDatabase')
       createTestDatabase()
     end 
@@ -90,10 +94,10 @@ defaultStrLength   equate(60)
 !Connstr     string('dennishyperv\dev,default_test,,Driver={{ODBC Driver 13 for SQL Server};App=lmno')
 !Connstr     string('dennishyperv\dev,default_test,,Driver={{SQL Server Native Client 11.0};App=lmno')
 
-Connstr     string('Driver={{ODBC Driver 13 for SQL Server};server=dennishyperv\dev;Database=default_test;trusted_connection=yes;App=lmno')
+!Connstr     string('Driver={{ODBC Driver 13 for SQL Server};server=dennishyperv\dev;Database=default_test;trusted_connection=yes;App=lmno')
 !Connstr     string('Driver={{ODBC Driver 13 for SQL Server};server=dennishyperv\dev;Database=default_test;trusted_connection=yes;in_valid=demo;App=lmno')
 
-!Connstr     string('Driver={{ODBC Driver 17 for SQL Server};server=dennishyperv\dev;Database=default_test;trusted_connection=yes;App=lmno')
+Connstr     string('Driver={{ODBC Driver 17 for SQL Server};server=dennishyperv\dev;Database=default_test;trusted_connection=yes;App=lmno')
 ! -------------------------------------------------------------------------------------
 
 ! -------------------------------------------------------------------------------------
@@ -185,8 +189,11 @@ alwaysShowLog   bool
   odbcSetup()
   fileManagerSetup()
 
-  createTestDatabase()
+  !createTestDatabase()
 
+  freeQueues()
+  fmOdbcBcpUpdate(fm)  
+  stop('kill it')
   executeQuery(fm)
   freeQueues()
   

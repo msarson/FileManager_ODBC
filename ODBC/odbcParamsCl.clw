@@ -602,12 +602,3 @@ recCount long
 ! end FillPlaceHolders
 ! --------------------------------------------------------------------------------  
 
-ParametersClass.afindByParamName procedure(string pName) !,sqlReturn
-
-retv   sqlReturn(sql_Success)
-
-  code 
-
-  return retv
-! end findByParamName
-! --------------------------------------------------------------------------------  

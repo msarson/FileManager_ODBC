@@ -1,6 +1,5 @@
 
 
-
 !ABCIncludeFile
 
   OMIT('_EndOfInclude_',_ODBCCallPresent_)
@@ -20,7 +19,7 @@ _ODBCCallPresent_   EQUATE(1)
 ! that is passed in as a string but there some minor differences. 
 ! splitting the the calls into two objects, both derived from the same base object
 ! gives us a little cleaner interface and makes adding or changing parts of the 
-! classes mush simpler.
+! classes much simpler.
 ! ----------------------------------------------------------------------------------
 odbcCallType class(odbcBaseClType),type,module('odbcCall.clw'),link('odbcCall.clw',_ABCLinkMode_),dll(_ABCDllMode_)
 ! set up and tear down

@@ -160,7 +160,7 @@ retv sqlReturn,auto
 ! ----------------------------------------------------------------------
 odbcTransactionClType.beginTrans procedure()
 
-autoOff   long(SQL_AUTOCOMMIT_OFF)
+autoOff   SQLINTEGER(SQL_AUTOCOMMIT_OFF)
 retv      sqlReturn,auto
 
   code
@@ -207,6 +207,7 @@ retv      sqlReturn,auto
 ! ----------------------------------------------------------------------
 odbcTransactionClType.EndTrans procedure(long committRollBack) !sqlReturn,private
 
+autoOn    SQLINTEGER(SQL_AUTOCOMMIT_ON)
 retv      sqlReturn,auto
 
   code
@@ -220,7 +221,10 @@ retv      sqlReturn,auto
       retv = SQLSetConnectAttr(self.hDbc, SQL_ATTR_TXN_ISOLATION, self.defaultIsolationLvl, SQL_IS_INTEGER)
       self.currentIsolationLvl = self.defaultIsolationLvl
     end  
-  end  
+  end ! 
+    
+  ! turn it back on for the next call
+  retv = SQLSetConnectAttr(self.hDbc, SQL_ATTR_AUTOCOMMIT, autoOn, SQL_IS_INTEGER)  
 
   return retv
 ! end EndTransaction 

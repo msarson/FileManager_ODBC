@@ -17,6 +17,8 @@
 #compile "osFile.clw"
 #compile "fmOdbcFileMgr.clw"
 #compile "CreateTestDatabase.clw"
+#compile "fmOdbcBcp.clw"
 #pragma link("C%V%ODB%X%%L%.LIB")
 #pragma link("C:\git_repo\FileManager_ODBC\ODBC\odbc_13.lib")
+#pragma link("cla_bcp.lib")
 #link "fmOdbcDemo.exe"

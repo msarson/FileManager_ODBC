@@ -7,11 +7,12 @@
 
 #include <atlstr.h>
 
-#define _SQLNCLI_ODBC_
+//#define _SQLNCLI_ODBC_
 
-#include "sqlncli.h"			
+#include "C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\SDK\Include\msodbcsql.h"			
 
 #define DllExport   __declspec( dllexport )
+
 
 extern "C" {
   DllExport HENV ClaBcpInit();

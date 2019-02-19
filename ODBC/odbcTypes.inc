@@ -203,6 +203,18 @@ eSizeLong  equate(4)
 eSizeShort equate(2)
 eSizeByte  equate(1)
 
+DATE_STRUCT group,type 
+year          SQLSMALLINT
+month         SQLUSMALLINT
+day           SQLUSMALLINT
+            end
+
+dateTimeString equate(cstring)
+timeString     equate(cstring)
+
+bcp_Fail     equate(0)
+bcp_Success  equate(1)
+
 eColNameLength    equate(50)
 eParamNameLength  equate(50)
 

@@ -22,3 +22,6 @@ BCP/.vs/claBcp/v15/ipch/7132ccedf376ec89.ipch
 BCP/.vs/claBcp/v15/Browse.VC.opendb
 BCP/.vs/claBcp/v15/Browse.VC.db
 BCP/.vs/claBcp/v15/.suo
+*.BAK
+ODBC/cla_bcp.lib
+BCP/claBcp/msodbcsql.h
