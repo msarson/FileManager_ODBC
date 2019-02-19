@@ -9,6 +9,7 @@
 
 //#define _SQLNCLI_ODBC_
 
+// example path, adjust as needed for local system
 #include "C:\Program Files\Microsoft SQL Server\Client SDK\ODBC\170\SDK\Include\msodbcsql.h"			
 
 #define DllExport   __declspec( dllexport )
