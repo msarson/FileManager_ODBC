@@ -10,24 +10,23 @@
      end 
    end
 
-bcpRowsToInsert long(100000)
+bcpRowsToInsert long(10000)
 
 fmOdbcBcpUpdate procedure(fileMgrODBC fmOdbc)
 
-tname cstring('dbo.labeldemo')
+tname cstring('dbo.Bcpdemo')
 retv  bool,auto
 
 x     long,auto
 numberInserted  long,auto
 
 currentRows   long,auto
-insertedRows  long,auto
 
   code
 
-  fillQueue()
+  writeLine(logFile, 'Begin BCP test')
 
-  currentRows = readCurrentCount(fmOdbc)
+  fillQueue()
 
   if (fmOdbc.init_bcp() <> level:benign) 
     message('Init of the BCP operation failed.')
@@ -43,7 +42,6 @@ insertedRows  long,auto
 
   if (retv = bcp_Success)
     if (BindColumns(fmOdbc) = bcp_Success)
-
       loop x = 1 to bcpRowsToInsert
         get(DemoQueue, x)
         retv = fmOdbc.bcp.sendRow()
@@ -59,28 +57,29 @@ insertedRows  long,auto
 
   fmodbc.disconnectBcp()
   
-  insertedRows = readCurrentCount(fmOdbc)
+  writeLine(logFile, 'BCP test inserted ' & numberInserted & ' rows.')
 
-  if (insertedRows - currentRows <> numberInserted)
-    message('BCP Insert failed.')
+  if (bcpRowsToInsert = numberInserted)
+    writeLine(logFile, 'BCP test passed')
+  else 
+    writeLine(logFile, 'BCP test failed')
   end 
-
-  deletenewRow(fmOdbc)
+  
+  writeLine(logFile, 'End BCP test')
 
   return
 
 ! bind the queue fields to table columns.
-! note the idNumber column is the first field in the queue
-! but is the second column in the table.  there is an identity
+! note the idNumber is the second column in the table.  there is an identity
 ! column in the table and it is the first column.
 ! the identity column can be at any ordinal position but the
-! binding must be adjusted so there is not data inserted into that column.
+! binding must be adjusted so there is no data inserted into that column.
+! there are options to allow the identity column to be 
 BindColumns procedure(fileMgrODBC fmOdbc) !,bool
 
 retv   bool(true)
 
   code
-
 
   ! add the two columns for the insert, start at column 2
   ! skip the first one becauswe it is an identity column
